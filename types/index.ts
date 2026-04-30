@@ -1,0 +1,30 @@
+export interface Cliente {
+  id: string
+  nome: string
+  ramo: string
+  whatsapp: string
+  email: string
+  dias_atendimento: number[]
+  horario_inicio: string
+  horario_fim: string
+  duracao_atendimento: number
+  intervalo_entre: number
+  observacoes?: string
+  sigla: string
+  status: 'ativo' | 'inativo'
+  created_at: string
+}
+
+export interface Agendamento {
+  id: string
+  cliente_id: string
+  nome_paciente: string
+  whatsapp_paciente: string
+  data: string
+  horario: string
+  tipo_atendimento: string
+  observacao?: string
+  status: 'agendado' | 'confirmado' | 'cancelado' | 'realizado'
+  created_at: string
+  cliente?: Cliente
+}
