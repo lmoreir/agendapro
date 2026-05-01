@@ -10,9 +10,12 @@ import {
   Users,
   Calendar,
   Filter,
+  Download,
 } from 'lucide-react'
 import { Agendamento, Cliente } from '@/types'
 import { createClient } from '@/lib/supabase/client'
+import { exportRelatorioToCSV } from '@/lib/export'
+import { useToast } from '@/hooks/useToast'
 
 interface EstatisticasRelatorio {
   total: number
@@ -36,8 +39,52 @@ export default function RelatoriosPage() {
   const [clientesStats, setClientesStats] = useState<ClienteComEstatisticas[]>([])
   const [loading, setLoading] = useState(true)
   const [filterStatus, setFilterStatus] = useState('')
+  const { addToast } = useToast()
 
   const supabase = createClient()
+
+  const handleExportRelatorio = () => {
+    try {
+      if (!stats) return
+
+      const data = [
+        {
+          'Métrica': 'Total de Agendamentos',
+          'Valor': stats.total,
+        },
+        {
+          'Métrica': 'Confirmados',
+          'Valor': stats.confirmados,
+        },
+        {
+          'Métrica': 'Realizados',
+          'Valor': stats.realizados,
+        },
+        {
+          'Métrica': 'Pendentes',
+          'Valor': stats.pendentes,
+        },
+        {
+          'Métrica': 'Cancelados',
+          'Valor': stats.cancelados,
+        },
+        {
+          'Métrica': 'Taxa de Confirmação (%)',
+          'Valor': stats.taxaConfirmacao,
+        },
+        {
+          'Métrica': 'Taxa de Cancelamento (%)',
+          'Valor': stats.taxaCancelamento,
+        },
+      ]
+
+      exportRelatorioToCSV(data, `relatorio-${new Date().toISOString().split('T')[0]}`)
+      addToast('Relatório exportado com sucesso!', 'success')
+    } catch (error) {
+      console.error('Erro ao exportar:', error)
+      addToast('Erro ao exportar relatório', 'error')
+    }
+  }
 
   useEffect(() => {
     const loadData = async () => {
@@ -135,6 +182,22 @@ export default function RelatoriosPage() {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Relatórios</h1>
+          <p className="text-gray-600 mt-1">Análise de agendamentos e desempenho</p>
+        </div>
+        <button
+          onClick={handleExportRelatorio}
+          disabled={loading || !stats}
+          className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition font-medium disabled:opacity-50"
+        >
+          <Download className="w-5 h-5" />
+          Exportar CSV
+        </button>
+      </div>
+
       {/* Cards de Estatísticas */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Total de Agendamentos */}

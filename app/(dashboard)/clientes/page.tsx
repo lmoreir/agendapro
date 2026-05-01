@@ -1,10 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Plus, Loader2, Trash2, Edit2, AlertCircle } from 'lucide-react'
+import { Plus, Loader2, Trash2, Edit2, AlertCircle, Download } from 'lucide-react'
 import { Cliente } from '@/types'
 import { createClient } from '@/lib/supabase/client'
 import { ClientModal } from '@/components/client-modal'
+import { exportToCSV } from '@/lib/export'
+import { useToast } from '@/hooks/useToast'
 
 const DIAS_SEMANA_MAP: Record<number, string> = {
   0: 'Dom',
@@ -24,6 +26,7 @@ export default function ClientesPage() {
   const [deleting, setDeleting] = useState<string | null>(null)
 
   const supabase = createClient()
+  const { addToast } = useToast()
 
   // Carregar clientes
   const loadClientes = async () => {
@@ -57,9 +60,10 @@ export default function ClientesPage() {
       if (error) throw error
 
       setClientes(prev => prev.filter(c => c.id !== id))
+      addToast('Cliente deletado com sucesso!', 'success')
     } catch (error) {
       console.error('Erro ao deletar cliente:', error)
-      alert('Erro ao deletar cliente')
+      addToast('Erro ao deletar cliente', 'error')
     } finally {
       setDeleting(null)
     }
@@ -75,6 +79,30 @@ export default function ClientesPage() {
   const handleNovoClient = () => {
     setSelectedCliente(null)
     setIsModalOpen(true)
+  }
+
+  // Exportar clientes
+  const handleExportClientes = () => {
+    try {
+      const data = clientes.map(cliente => ({
+        'Nome': cliente.nome,
+        'Sigla': cliente.sigla,
+        'Ramo': cliente.ramo,
+        'WhatsApp': cliente.whatsapp,
+        'Email': cliente.email,
+        'Dias': formatarDias(cliente.dias_atendimento),
+        'Horário Início': formatarHorario(cliente.horario_inicio),
+        'Horário Fim': formatarHorario(cliente.horario_fim),
+        'Duração (min)': cliente.duracao_atendimento,
+        'Intervalo (min)': cliente.intervalo_entre,
+        'Status': cliente.status,
+      }))
+
+      exportToCSV(data, `clientes-${new Date().toISOString().split('T')[0]}`)
+    } catch (error) {
+      console.error('Erro ao exportar:', error)
+      alert('Erro ao exportar clientes')
+    }
   }
 
   // Fechar modal
@@ -108,13 +136,23 @@ export default function ClientesPage() {
             Gerencie todos os seus clientes
           </p>
         </div>
-        <button
-          onClick={handleNovoClient}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-medium"
-        >
-          <Plus className="w-5 h-5" />
-          Novo Cliente
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={handleExportClientes}
+            disabled={loading || clientes.length === 0}
+            className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Download className="w-5 h-5" />
+            Exportar CSV
+          </button>
+          <button
+            onClick={handleNovoClient}
+            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-medium"
+          >
+            <Plus className="w-5 h-5" />
+            Novo Cliente
+          </button>
+        </div>
       </div>
 
       {/* Loading State */}

@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation'
 import { Plus, LogOut } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+import { GlobalSearch } from '@/components/global-search'
 
 const pageTitles: Record<string, string> = {
   '/dashboard':  'Dashboard',
@@ -31,8 +32,13 @@ export function Topbar() {
   }
 
   return (
-    <header className="bg-white border-b border-gray-200 px-6 h-16 flex items-center justify-between flex-shrink-0">
+    <header className="bg-white border-b border-gray-200 px-6 h-16 flex items-center justify-between flex-shrink-0 gap-4">
       <h1 className="text-lg font-semibold text-gray-900">{title}</h1>
+
+      {/* Search (visible em todas páginas) */}
+      <div className="flex-1 max-w-xs">
+        <GlobalSearch />
+      </div>
 
       <div className="flex items-center gap-3">
         {action && (

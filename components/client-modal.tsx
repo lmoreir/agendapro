@@ -1,9 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, Loader2 } from 'lucide-react'
+import { X, Loader2, AlertCircle } from 'lucide-react'
 import { Cliente } from '@/types'
 import { createClient } from '@/lib/supabase/client'
+import { useToast } from '@/hooks/useToast'
+import { validateFormularioCliente } from '@/lib/validations'
 
 const DIAS_SEMANA = [
   { label: 'Seg', value: 1 },
@@ -24,6 +26,7 @@ interface ClientModalProps {
 
 export function ClientModal({ isOpen, onClose, onSuccess, cliente }: ClientModalProps) {
   const [loading, setLoading] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
   const [formData, setFormData] = useState({
     nome: '',
     ramo: '',
@@ -40,6 +43,7 @@ export function ClientModal({ isOpen, onClose, onSuccess, cliente }: ClientModal
   })
 
   const supabase = createClient()
+  const { addToast } = useToast()
 
   // Preencher form se for edição
   useEffect(() => {
@@ -98,6 +102,17 @@ export function ClientModal({ isOpen, onClose, onSuccess, cliente }: ClientModal
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setErrors({})
+
+    // Validar formulário
+    const validation = validateFormularioCliente(formData)
+    if (!validation.isValid) {
+      setErrors(validation.errors)
+      const firstError = Object.values(validation.errors)[0]
+      addToast(firstError, 'error')
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -141,9 +156,10 @@ export function ClientModal({ isOpen, onClose, onSuccess, cliente }: ClientModal
 
       onSuccess()
       onClose()
+      addToast(cliente ? 'Cliente atualizado com sucesso!' : 'Cliente criado com sucesso!', 'success')
     } catch (error) {
       console.error('Erro ao salvar cliente:', error)
-      alert('Erro ao salvar cliente')
+      addToast('Erro ao salvar cliente', 'error')
     } finally {
       setLoading(false)
     }
@@ -181,9 +197,17 @@ export function ClientModal({ isOpen, onClose, onSuccess, cliente }: ClientModal
                 value={formData.nome}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  errors.nome ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                }`}
                 placeholder="Nome do cliente"
               />
+              {errors.nome && (
+                <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4" />
+                  {errors.nome}
+                </p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -196,9 +220,17 @@ export function ClientModal({ isOpen, onClose, onSuccess, cliente }: ClientModal
                 onChange={handleInputChange}
                 required
                 maxLength={10}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  errors.sigla ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                }`}
                 placeholder="Ex: ABC"
               />
+              {errors.sigla && (
+                <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4" />
+                  {errors.sigla}
+                </p>
+              )}
             </div>
           </div>
 
@@ -230,9 +262,17 @@ export function ClientModal({ isOpen, onClose, onSuccess, cliente }: ClientModal
                 value={formData.whatsapp}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  errors.whatsapp ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                }`}
                 placeholder="11 99999-9999"
               />
+              {errors.whatsapp && (
+                <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4" />
+                  {errors.whatsapp}
+                </p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">

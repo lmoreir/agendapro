@@ -12,10 +12,13 @@ import {
   User,
   Phone,
   Filter,
+  Download,
 } from 'lucide-react'
 import { Agendamento, Cliente } from '@/types'
 import { createClient } from '@/lib/supabase/client'
 import { AgendamentoModal } from '@/components/agendamento-modal'
+import { exportAgendamentosToCSV } from '@/lib/export'
+import { useToast } from '@/hooks/useToast'
 
 const statusConfig = {
   agendado: { label: 'Agendado', bg: 'bg-blue-100', text: 'text-blue-800' },
@@ -42,6 +45,7 @@ export default function AgendaPage() {
   const [filterStatus, setFilterStatus] = useState('')
 
   const supabase = createClient()
+  const { addToast } = useToast()
 
   // Carregar dados
   const loadData = async () => {
@@ -82,9 +86,10 @@ export default function AgendaPage() {
       if (error) throw error
 
       setAgendamentos(prev => prev.filter(a => a.id !== id))
+      addToast('Agendamento deletado com sucesso!', 'success')
     } catch (error) {
       console.error('Erro ao deletar:', error)
-      alert('Erro ao deletar agendamento')
+      addToast('Erro ao deletar agendamento', 'error')
     } finally {
       setDeleting(null)
     }
@@ -100,6 +105,28 @@ export default function AgendaPage() {
   const handleNovoAgendamento = () => {
     setSelectedAgendamento(null)
     setIsModalOpen(true)
+  }
+
+  // Exportar agendamentos
+  const handleExportAgendamentos = () => {
+    try {
+      const data = agendamentosFiltrados.map(a => ({
+        'Data': a.data,
+        'Horário': formatarHorario(a.horario),
+        'Paciente': a.nome_paciente,
+        'WhatsApp': a.whatsapp_paciente,
+        'Cliente': (a.clientes as any)?.nome || 'N/A',
+        'Tipo': a.tipo_atendimento,
+        'Status': a.status,
+        'Observação': a.observacao || '',
+      }))
+
+      const filename = `agendamentos-${new Date().toISOString().split('T')[0]}`
+      exportAgendamentosToCSV(agendamentosFiltrados, filename)
+    } catch (error) {
+      console.error('Erro ao exportar:', error)
+      alert('Erro ao exportar agendamentos')
+    }
   }
 
   // Fechar modal
@@ -141,13 +168,24 @@ export default function AgendaPage() {
           <h1 className="text-3xl font-bold text-gray-900">Agenda</h1>
           <p className="text-gray-600 mt-1">Gerencie seus agendamentos</p>
         </div>
-        <button
-          onClick={handleNovoAgendamento}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-medium"
-        >
-          <Plus className="w-5 h-5" />
-          Novo Agendamento
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={handleExportAgendamentos}
+            disabled={loading || agendamentosFiltrados.length === 0}
+            className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Download className="w-5 h-5" />
+            Exportar CSV
+          </button>
+          <button
+            onClick={handleNovoAgendamento}
+            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-medium"
+          >
+            <Plus className="w-5 h-5" />
+            Novo Agendamento
+          </button>
+        </div>
+      </div>
       </div>
 
       {/* Filtros */}

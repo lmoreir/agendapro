@@ -1,9 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, Loader2 } from 'lucide-react'
+import { X, Loader2, AlertCircle } from 'lucide-react'
 import { Agendamento, Cliente } from '@/types'
 import { createClient } from '@/lib/supabase/client'
+import { useToast } from '@/hooks/useToast'
+import { validateFormularioAgendamento } from '@/lib/validations'
 
 interface AgendamentoModalProps {
   isOpen: boolean
@@ -21,6 +23,7 @@ export function AgendamentoModal({
   clientes,
 }: AgendamentoModalProps) {
   const [loading, setLoading] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
   const [formData, setFormData] = useState({
     cliente_id: '',
     nome_paciente: '',
@@ -33,6 +36,7 @@ export function AgendamentoModal({
   })
 
   const supabase = createClient()
+  const { addToast } = useToast()
 
   // Preencher form se for edição
   useEffect(() => {
@@ -85,6 +89,17 @@ export function AgendamentoModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setErrors({})
+
+    // Validar formulário
+    const validation = validateFormularioAgendamento(formData)
+    if (!validation.isValid) {
+      setErrors(validation.errors)
+      const firstError = Object.values(validation.errors)[0]
+      addToast(firstError, 'error')
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -107,9 +122,10 @@ export function AgendamentoModal({
 
       onSuccess()
       onClose()
+      addToast(agendamento ? 'Agendamento atualizado com sucesso!' : 'Agendamento criado com sucesso!', 'success')
     } catch (error) {
       console.error('Erro ao salvar agendamento:', error)
-      alert('Erro ao salvar agendamento')
+      addToast('Erro ao salvar agendamento', 'error')
     } finally {
       setLoading(false)
     }
