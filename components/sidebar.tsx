@@ -18,11 +18,11 @@ type NavItem = {
 }
 
 const navItems: NavItem[] = [
-  { href: '/dashboard', label: 'Dashboard',  icon: LayoutDashboard },
-  { href: '/agenda',    label: 'Agenda',     icon: CalendarDays    },
-  { href: '/clientes',  label: 'Clientes',   icon: Users           },
-  { href: '/whatsapp',  label: 'WhatsApp',   icon: MessageCircle   },
-  { href: '/relatorios',label: 'Relatórios', icon: BarChart3       },
+  { href: '/dashboard/dashboard', label: 'Dashboard',   icon: LayoutDashboard },
+  { href: '/dashboard/agenda',    label: 'Agenda',      icon: CalendarDays    },
+  { href: '/dashboard/clientes',  label: 'Clientes',    icon: Users           },
+  { href: '/dashboard/whatsapp',  label: 'WhatsApp',    icon: MessageCircle   },
+  { href: '/dashboard/relatorios',label: 'Relatórios',  icon: BarChart3       },
 ]
 
 export function Sidebar() {
