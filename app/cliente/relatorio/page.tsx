@@ -7,12 +7,11 @@ import {
   Clock,
   XCircle,
   TrendingUp,
-  Users,
   Calendar,
-  Filter,
 } from 'lucide-react'
 import { Agendamento, Cliente } from '@/types'
 import { createClient } from '@/lib/supabase/client'
+import { useAuth } from '@/hooks/useAuth'
 
 interface EstatisticasRelatorio {
   total: number
@@ -24,43 +23,50 @@ interface EstatisticasRelatorio {
   taxaCancelamento: number
 }
 
-interface ClienteComEstatisticas extends Cliente {
-  totalAgendamentos: number
+interface AgendamentoPorMes {
+  mes: string
+  total: number
   confirmados: number
   realizados: number
   cancelados: number
 }
 
-export default function RelatoriosPage() {
+export default function ClienteRelatorioPage() {
+  const { user } = useAuth()
   const [stats, setStats] = useState<EstatisticasRelatorio | null>(null)
-  const [clientesStats, setClientesStats] = useState<ClienteComEstatisticas[]>([])
+  const [agendamentosPorMes, setAgendamentosPorMes] = useState<AgendamentoPorMes[]>([])
+  const [cliente, setCliente] = useState<Cliente | null>(null)
   const [loading, setLoading] = useState(true)
-  const [filterStatus, setFilterStatus] = useState('')
 
   const supabase = createClient()
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Buscar todos os agendamentos
+        if (!user?.cliente_id) return
+
+        // Buscar cliente
+        const { data: clienteData, error: clienteError } = await supabase
+          .from('clientes')
+          .select('*')
+          .eq('id', user.cliente_id)
+          .single()
+
+        if (clienteError) throw clienteError
+        setCliente(clienteData)
+
+        // Buscar todos os agendamentos do cliente (sem filtro de data)
         const { data: agendamentosData, error: agendamentosError } = await supabase
           .from('agendamentos')
           .select('*')
+          .eq('cliente_id', user.cliente_id)
+          .order('data', { ascending: false })
 
         if (agendamentosError) throw agendamentosError
 
         const agendamentos = agendamentosData || []
 
-        // Buscar todos os clientes
-        const { data: clientesData, error: clientesError } = await supabase
-          .from('clientes')
-          .select('*')
-
-        if (clientesError) throw clientesError
-
-        const clientes = clientesData || []
-
-        // Calcular estatísticas gerais
+        // Calcular estatísticas
         const total = agendamentos.length
         const confirmados = agendamentos.filter(
           a => a.status === 'confirmado' || a.status === 'realizado'
@@ -82,31 +88,39 @@ export default function RelatoriosPage() {
           taxaCancelamento,
         })
 
-        // Calcular estatísticas por cliente
-        const clientesComStats: ClienteComEstatisticas[] = clientes.map(cliente => {
-          const agendamentosCliente = agendamentos.filter(
-            a => a.cliente_id === cliente.id
-          )
-          const confirmadosCliente = agendamentosCliente.filter(
-            a => a.status === 'confirmado' || a.status === 'realizado'
-          ).length
-          const realizadosCliente = agendamentosCliente.filter(
-            a => a.status === 'realizado'
-          ).length
-          const canceladosCliente = agendamentosCliente.filter(
-            a => a.status === 'cancelado'
-          ).length
+        // Agrupar por mês
+        const mesesMap = new Map<string, AgendamentoPorMes>()
+        agendamentos.forEach(agendamento => {
+          const data = new Date(agendamento.data)
+          const mes = data.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+          const mesKey = `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`
 
-          return {
-            ...cliente,
-            totalAgendamentos: agendamentosCliente.length,
-            confirmados: confirmadosCliente,
-            realizados: realizadosCliente,
-            cancelados: canceladosCliente,
+          if (!mesesMap.has(mesKey)) {
+            mesesMap.set(mesKey, {
+              mes,
+              total: 0,
+              confirmados: 0,
+              realizados: 0,
+              cancelados: 0,
+            })
+          }
+
+          const mesData = mesesMap.get(mesKey)!
+          mesData.total++
+          if (agendamento.status === 'confirmado' || agendamento.status === 'realizado') {
+            mesData.confirmados++
+          }
+          if (agendamento.status === 'realizado') {
+            mesData.realizados++
+          }
+          if (agendamento.status === 'cancelado') {
+            mesData.cancelados++
           }
         })
 
-        setClientesStats(clientesComStats.sort((a, b) => b.totalAgendamentos - a.totalAgendamentos))
+        // Converter para array e ordenar
+        const mesesArray = Array.from(mesesMap.values()).reverse()
+        setAgendamentosPorMes(mesesArray)
       } catch (error) {
         console.error('Erro ao carregar relatório:', error)
       } finally {
@@ -115,7 +129,7 @@ export default function RelatoriosPage() {
     }
 
     loadData()
-  }, [supabase])
+  }, [user, supabase])
 
   if (loading) {
     return (
@@ -157,7 +171,7 @@ export default function RelatoriosPage() {
               <p className="text-sm text-gray-600 mb-2">Taxa de Confirmação</p>
               <p className="text-3xl font-bold text-gray-900">{stats.taxaConfirmacao}%</p>
               <p className="text-xs text-gray-600 mt-2">
-                {stats.confirmados} confirmados
+                {stats.confirmados} de {stats.total} confirmados
               </p>
             </div>
             <div className="bg-green-100 p-3 rounded-lg">
@@ -173,7 +187,7 @@ export default function RelatoriosPage() {
               <p className="text-sm text-gray-600 mb-2">Taxa de Cancelamento</p>
               <p className="text-3xl font-bold text-gray-900">{stats.taxaCancelamento}%</p>
               <p className="text-xs text-gray-600 mt-2">
-                {stats.cancelados} cancelados
+                {stats.cancelados} de {stats.total} cancelados
               </p>
             </div>
             <div className="bg-red-100 p-3 rounded-lg">
@@ -230,25 +244,22 @@ export default function RelatoriosPage() {
         </div>
       </div>
 
-      {/* Relatório por Cliente */}
+      {/* Gráfico de Evolução por Mês */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
-          <Users className="w-5 h-5" />
-          Agendamentos por Cliente
+          <TrendingUp className="w-5 h-5" />
+          Evolução por Mês
         </h2>
 
-        {clientesStats.length === 0 ? (
-          <p className="text-gray-600 text-center py-8">Nenhum cliente encontrado</p>
+        {agendamentosPorMes.length === 0 ? (
+          <p className="text-gray-600 text-center py-8">Nenhum agendamento encontrado</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                    Cliente
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                    Ramo
+                    Mês
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
                     Total
@@ -263,43 +274,35 @@ export default function RelatoriosPage() {
                     Cancelados
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                    Taxa de Confirmação
+                    % Confirmação
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {clientesStats.map(cliente => {
-                  const taxaConfirmacao =
-                    cliente.totalAgendamentos > 0
-                      ? Math.round(
-                          ((cliente.confirmados + cliente.realizados) /
-                            cliente.totalAgendamentos) *
-                            100
-                        )
+                {agendamentosPorMes.map((mes, idx) => {
+                  const taxaConfirmacaoMes =
+                    mes.total > 0
+                      ? Math.round(((mes.confirmados + mes.realizados) / mes.total) * 100)
                       : 0
                   return (
-                    <tr key={cliente.id} className="hover:bg-gray-50 transition">
-                      <td className="px-6 py-4">
-                        <div className="font-medium text-gray-900">{cliente.nome}</div>
-                        <div className="text-xs text-gray-600 mt-1">{cliente.sigla}</div>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">{cliente.ramo}</td>
+                    <tr key={idx} className="hover:bg-gray-50 transition">
                       <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                        {cliente.totalAgendamentos}
+                        {mes.mes}
                       </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">{mes.total}</td>
                       <td className="px-6 py-4">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                          {cliente.realizados}
+                          {mes.realizados}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          {cliente.confirmados}
+                          {mes.confirmados}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                          {cliente.cancelados}
+                          {mes.cancelados}
                         </span>
                       </td>
                       <td className="px-6 py-4">
@@ -307,11 +310,11 @@ export default function RelatoriosPage() {
                           <div className="w-16 bg-gray-200 rounded-full h-2">
                             <div
                               className="bg-blue-600 h-2 rounded-full"
-                              style={{ width: `${taxaConfirmacao}%` }}
+                              style={{ width: `${taxaConfirmacaoMes}%` }}
                             ></div>
                           </div>
                           <span className="text-sm font-medium text-gray-900 w-12">
-                            {taxaConfirmacao}%
+                            {taxaConfirmacaoMes}%
                           </span>
                         </div>
                       </td>

@@ -1,5 +1,6 @@
+import { redirect } from 'next/navigation'
 import { Sidebar } from '@/components/sidebar'
-import { Topbar }  from '@/components/topbar'
+import { Topbar } from '@/components/topbar'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (

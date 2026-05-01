@@ -1,0 +1,31 @@
+import { useState, useCallback } from 'react'
+
+type ToastType = 'success' | 'error' | 'info' | 'warning'
+
+interface Toast {
+  id: string
+  type: ToastType
+  message: string
+}
+
+export function useToast() {
+  const [toasts, setToasts] = useState<Toast[]>([])
+
+  const addToast = useCallback((message: string, type: ToastType = 'info') => {
+    const id = Math.random().toString(36).substr(2, 9)
+    setToasts(prev => [...prev, { id, type, message }])
+
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id))
+    }, 3000)
+
+    return id
+  }, [])
+
+  const removeToast = useCallback((id: string) => {
+    setToasts(prev => prev.filter(t => t.id !== id))
+  }, [])
+
+  return { toasts, addToast, removeToast }
+}

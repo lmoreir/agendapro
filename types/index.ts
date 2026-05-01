@@ -28,3 +28,15 @@ export interface Agendamento {
   created_at: string
   cliente?: Cliente
 }
+
+export type UserRole = 'admin' | 'cliente'
+
+export interface User {
+  id: string
+  email: string
+  senha: string
+  role: UserRole
+  cliente_id?: string // Preenchido se role = 'cliente'
+  nome: string
+  created_at: string
+}
