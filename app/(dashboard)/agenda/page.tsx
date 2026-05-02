@@ -241,8 +241,56 @@ export default function AgendaPage() {
             <p className="mt-4 max-w-2xl text-sm text-brand-100/90 leading-6">
               Visualize e gerencie todos os seus compromissos em um único lugar.
             </p>
-          </div>
-          <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="mt-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex items-center gap-2">
+                  <Filter className="w-4 h-4 text-brand-200" />
+                  <span className="text-sm font-medium text-brand-200">Filtros:</span>
+                </div>
+                <select
+                  value={filterClienteId}
+                  onChange={e => setFilterClienteId(e.target.value)}
+                  className="px-3 py-2 border border-brand-300/30 rounded-xl text-sm bg-white/10 text-white placeholder-brand-200 focus:ring-2 focus:ring-white/50 focus:border-white/50"
+                >
+                  <option value="">Todos os clientes</option>
+                  {clientes.map(cliente => (
+                    <option key={cliente.id} value={cliente.id}>
+                      {cliente.nome}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={filterStatus}
+                  onChange={e => setFilterStatus(e.target.value)}
+                  className="px-3 py-2 border border-brand-300/30 rounded-xl text-sm bg-white/10 text-white placeholder-brand-200 focus:ring-2 focus:ring-white/50 focus:border-white/50"
+                >
+                  <option value="">Todos os status</option>
+                  <option value="agendado">Agendado</option>
+                  <option value="confirmado">Confirmado</option>
+                  <option value="realizado">Realizado</option>
+                  <option value="cancelado">Cancelado</option>
+                </select>
+              </div>
+              <div className="flex gap-2">
+                <div className="rounded-2xl bg-white/10 border border-white/15 px-4 py-2">
+                  <p className="text-xs text-brand-200/80">Total</p>
+                  <p className="text-lg font-semibold">{agendamentos.length}</p>
+                </div>
+                <div className="rounded-2xl bg-white/10 border border-white/15 px-4 py-2">
+                  <p className="text-xs text-brand-200/80">Hoje</p>
+                  <p className="text-lg font-semibold">{appointmentsTodayCount}</p>
+                </div>
+                <div className="rounded-2xl bg-white/10 border border-white/15 px-4 py-2">
+                  <p className="text-xs text-brand-200/80">Próximo</p>
+                  <p className="text-sm font-semibold">
+                    {nextAppointment
+                      ? `${formatarDataCurta(nextAppointment.data)} ${formatarHorario(nextAppointment.horario)}`
+                      : 'Nenhum'
+                    }
+                  </p>
+                </div>
+              </div>
+            </div>
             <button
               onClick={handleExportAgendamentos}
               disabled={loading || agendamentosFiltrados.length === 0}
@@ -421,65 +469,34 @@ export default function AgendaPage() {
 
         <aside className="space-y-6">
           <div className="bg-white rounded-3xl border border-gray-200 p-4 shadow-sm">
-            <h2 className="text-sm font-semibold text-gray-900 mb-3">Filtros</h2>
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Cliente</label>
-                <select
-                  value={filterClienteId}
-                  onChange={e => setFilterClienteId(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Todos</option>
-                  {clientes.map(cliente => (
-                    <option key={cliente.id} value={cliente.id}>
-                      {cliente.nome}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Status</label>
-                <select
-                  value={filterStatus}
-                  onChange={e => setFilterStatus(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Todos</option>
-                  <option value="agendado">Agendado</option>
-                  <option value="confirmado">Confirmado</option>
-                  <option value="realizado">Realizado</option>
-                  <option value="cancelado">Cancelado</option>
-                </select>
-              </div>
+            <h2 className="text-sm font-semibold text-gray-900 mb-3">Próximos agendamentos</h2>
+            <div className="space-y-2 max-h-[400px] overflow-y-auto">
+              {loading ? (
+                <div className="flex items-center justify-center py-6">
+                  <Loader2 className="w-5 h-5 animate-spin text-brand-700" />
+                </div>
+              ) : agendamentosFiltrados.length === 0 ? (
+                <p className="text-xs text-gray-500 text-center py-4">Nenhum agendamento</p>
+              ) : (
+                agendamentosFiltrados.slice(0, 6).map(agendamento => {
+                  const config = statusConfig[agendamento.status as keyof typeof statusConfig]
+                  return (
+                    <div key={agendamento.id} className="rounded-2xl bg-gray-50 p-2.5 text-xs border border-gray-100">
+                      <div className="flex items-center justify-between gap-1 mb-1">
+                        <span className="font-medium text-gray-900 truncate">{formatarDataCurta(agendamento.data)}</span>
+                        <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-semibold whitespace-nowrap ${config.bg} ${config.text}`}>
+                          {config.label}
+                        </span>
+                      </div>
+                      <p className="font-medium text-gray-900 truncate">{formatarHorario(agendamento.horario)}</p>
+                      <p className="text-gray-600 truncate">{(agendamento as any).clientes?.nome || 'N/A'}</p>
+                      <p className="text-gray-600 truncate">{agendamento.nome_paciente}</p>
+                    </div>
+                  )
+                })
+              )}
             </div>
           </div>
-
-          <div className="bg-white rounded-3xl border border-gray-200 p-4 shadow-sm">
-            <h2 className="text-sm font-semibold text-gray-900 mb-3">Resumo</h2>
-            <div className="space-y-2">
-              <div className="rounded-2xl bg-brand-50 border border-brand-100 p-3">
-                <p className="text-xs text-brand-700 font-medium">Total</p>
-                <p className="mt-1 text-2xl font-semibold text-gray-900">{agendamentos.length}</p>
-              </div>
-              <div className="rounded-2xl bg-green-50 border border-green-100 p-3">
-                <p className="text-xs text-green-700 font-medium">Hoje</p>
-                <p className="mt-1 text-2xl font-semibold text-gray-900">{appointmentsTodayCount}</p>
-              </div>
-              <div className="rounded-2xl bg-blue-50 border border-blue-100 p-3">
-                <p className="text-xs text-blue-700 font-medium">Próximo</p>
-                <p className="mt-1 text-sm font-semibold text-gray-900 break-words">
-                  {nextAppointment
-                    ? `${formatarDataCurta(nextAppointment.data)} ${formatarHorario(nextAppointment.horario)}`
-                    : 'Nenhum'
-                  }
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-3xl border border-gray-200 p-4 shadow-sm">
-            <h2 className="text-sm font-semibold text-gray-900 mb-3">Próximos</h2>
             <div className="space-y-2 max-h-[400px] overflow-y-auto">
               {loading ? (
                 <div className="flex items-center justify-center py-6">
