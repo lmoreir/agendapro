@@ -499,33 +499,6 @@ export default function AgendaPage() {
               )}
             </div>
           </div>
-            <div className="space-y-2 max-h-[400px] overflow-y-auto">
-              {loading ? (
-                <div className="flex items-center justify-center py-6">
-                  <Loader2 className="w-5 h-5 animate-spin text-brand-700" />
-                </div>
-              ) : agendamentosFiltrados.length === 0 ? (
-                <p className="text-xs text-gray-500 text-center py-4">Nenhum agendamento</p>
-              ) : (
-                agendamentosFiltrados.slice(0, 6).map(agendamento => {
-                  const config = statusConfig[agendamento.status as keyof typeof statusConfig]
-                  return (
-                    <div key={agendamento.id} className="rounded-2xl bg-gray-50 p-2.5 text-xs border border-gray-100">
-                      <div className="flex items-center justify-between gap-1 mb-1">
-                        <span className="font-medium text-gray-900 truncate">{formatarDataCurta(agendamento.data)}</span>
-                        <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-semibold whitespace-nowrap ${config.bg} ${config.text}`}>
-                          {config.label}
-                        </span>
-                      </div>
-                      <p className="font-medium text-gray-900 truncate">{formatarHorario(agendamento.horario)}</p>
-                      <p className="text-gray-600 truncate">{(agendamento as any).clientes?.nome || 'N/A'}</p>
-                      <p className="text-gray-600 truncate">{agendamento.nome_paciente}</p>
-                    </div>
-                  )
-                })
-              )}
-            </div>
-          </div>
         </aside>
       </div>
 
