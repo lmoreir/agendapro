@@ -39,7 +39,7 @@ export default function AgendaPage() {
 
   const [filterClienteId, setFilterClienteId] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
-  const [calendarView, setCalendarView] = useState<'week' | 'month'>('week')
+  const [calendarView, setCalendarView] = useState<'week' | 'month'>('month')
   const [currentDate, setCurrentDate] = useState(new Date())
 
   const supabase = createClient()
@@ -123,6 +123,8 @@ export default function AgendaPage() {
 
       setClientes(clientesRes.data || [])
       setAgendamentos(agendamentosRes.data as Agendamento[] || [])
+      console.log('Clientes carregados:', clientesRes.data)
+      console.log('Agendamentos carregados:', agendamentosRes.data)
     } catch (error) {
       console.error('Erro ao carregar dados:', error)
       addToast('Erro ao carregar agendamentos', 'error')
@@ -317,8 +319,8 @@ export default function AgendaPage() {
           <div className="bg-white rounded-3xl border border-gray-200 p-6 shadow-sm">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-4">
               <div>
-                <h2 className="text-base font-semibold text-gray-900">Calendário</h2>
-                <p className="text-sm text-gray-500">Visualize seus compromissos por semana ou mês.</p>
+                <h2 className="text-lg font-bold text-gray-900">Agenda - {formatMonthLabel(currentDate).toUpperCase()}</h2>
+                <p className="text-sm text-gray-500 mt-1">Visualize todos os agendamentos do período.</p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <button
@@ -385,32 +387,36 @@ export default function AgendaPage() {
                     return isSameDay(eventDate, date)
                   })
                   return (
-                    <div key={date.toISOString()} className="rounded-3xl border border-gray-200 p-4 min-h-[280px] bg-gray-50">
-                      <div className="mb-3 flex items-center justify-between gap-2">
-                        <div>
-                          <p className="text-xs uppercase tracking-wide text-gray-500">{date.toLocaleDateString('pt-BR', { weekday: 'short' })}</p>
-                          <p className="text-lg font-semibold text-gray-900">{date.getDate()}</p>
-                        </div>
+                    <div key={date.toISOString()} className="rounded-2xl border border-gray-200 p-3 min-h-[320px] bg-gradient-to-br from-gray-50 to-white flex flex-col">
+                      <div className="mb-3 pb-2 border-b border-gray-200">
+                        <p className="text-xs uppercase tracking-wider font-bold text-brand-700">{date.toLocaleDateString('pt-BR', { weekday: 'short' })}</p>
+                        <p className="text-2xl font-bold text-gray-900 mt-1">{date.getDate()}</p>
                         <span className="text-[10px] font-semibold uppercase text-gray-500">
                           {date.toLocaleDateString('pt-BR', { month: 'short' })}
                         </span>
                       </div>
                       {events.length === 0 ? (
-                        <p className="text-xs text-gray-500">Sem compromissos</p>
+                        <div className="flex items-center justify-center flex-1">
+                          <p className="text-xs text-gray-400 text-center">Sem compromissos</p>
+                        </div>
                       ) : (
-                        <div className="space-y-2">
+                        <div className="space-y-2 flex-1">
                           {events.map(agendamento => {
                             const config = statusConfig[agendamento.status as keyof typeof statusConfig]
+                            const clienteName = (agendamento as any).clientes?.nome || ''
                             return (
-                              <div key={agendamento.id} className="rounded-2xl border border-gray-200 bg-white p-2 cursor-pointer hover:border-brand-300 transition">
-                                <div className="flex items-center justify-between gap-2 mb-1">
-                                  <p className="text-sm font-medium text-gray-900">{formatarHorario(agendamento.horario)}</p>
-                                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${config.bg} ${config.text}`}>
+                              <div
+                                key={agendamento.id}
+                                className="rounded-xl border border-gray-200 bg-white p-2.5 cursor-pointer hover:border-brand-400 hover:shadow-md transition group"
+                              >
+                                <div className="flex items-start justify-between gap-2 mb-1.5">
+                                  <p className="text-sm font-bold text-gray-900 group-hover:text-brand-700">{formatarHorario(agendamento.horario)}</p>
+                                  <span className={`flex-shrink-0 rounded-full px-2 py-0.5 text-[9px] font-bold ${config.bg} ${config.text}`}>
                                     {config.label}
                                   </span>
                                 </div>
-                                <p className="text-xs text-gray-600 truncate font-medium">{agendamento.nome_paciente}</p>
-                                <p className="text-xs text-gray-500 truncate">{(agendamento as any).clientes?.nome}</p>
+                                <p className="text-xs font-semibold text-gray-800 truncate">{agendamento.nome_paciente}</p>
+                                {clienteName && <p className="text-xs text-gray-600 truncate">{clienteName}</p>}
                               </div>
                             )
                           })}
@@ -433,30 +439,43 @@ export default function AgendaPage() {
                       return (
                         <div
                           key={day.toISOString()}
-                          className={`rounded-3xl border p-3 h-40 ${
-                            isCurrentMonth ? 'border-gray-200 bg-white' : 'border-transparent bg-gray-100 text-gray-400'
+                          className={`rounded-2xl border p-2 min-h-[140px] flex flex-col ${
+                            isCurrentMonth ? 'border-gray-200 bg-white' : 'border-gray-100 bg-gray-50 text-gray-400'
                           }`}
                         >
                           <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-semibold">{day.getDate()}</span>
+                            <span className={`text-sm font-bold ${isCurrentMonth ? 'text-gray-900' : 'text-gray-400'}`}>
+                              {day.getDate()}
+                            </span>
                             {events.length > 0 && (
-                              <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-semibold text-brand-800">
+                              <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-bold text-brand-800">
                                 {events.length}
                               </span>
                             )}
                           </div>
-                          <div className="space-y-1 text-xs text-gray-600 overflow-hidden" style={{ maxHeight: '5.5rem' }}>
-                            {events.slice(0, 2).map(ev => {
+                          <div className="space-y-1 text-[11px] flex-1 overflow-hidden">
+                            {events.slice(0, 3).map(ev => {
                               const config = statusConfig[ev.status as keyof typeof statusConfig]
+                              const clienteName = (ev as any).clientes?.nome || ''
                               return (
-                                <div key={ev.id} className="rounded-2xl bg-gray-50 p-1.5 truncate">
-                                  <p className="font-semibold text-gray-900 truncate text-[10px]">{formatarHorario(ev.horario)}</p>
-                                  <p className="text-gray-600 truncate text-[9px]">{ev.nome_paciente}</p>
+                                <div
+                                  key={ev.id}
+                                  className={`rounded-1.5xl p-1.5 border-l-2 ${
+                                    isCurrentMonth
+                                      ? `${config.bg} border-brand-600 text-gray-800`
+                                      : 'bg-gray-100 border-gray-300 text-gray-500'
+                                  }`}
+                                >
+                                  <p className="font-bold truncate">{formatarHorario(ev.horario)}</p>
+                                  <p className="truncate">{ev.nome_paciente}</p>
+                                  {clienteName && <p className="text-[9px] truncate text-gray-600">{clienteName}</p>}
                                 </div>
                               )
                             })}
-                            {events.length > 2 && (
-                              <p className="text-[10px] text-gray-500">+{events.length - 2} mais</p>
+                            {events.length > 3 && (
+                              <p className="text-[10px] text-gray-500 font-medium px-1.5">
+                                +{events.length - 3} mais
+                              </p>
                             )}
                           </div>
                         </div>
@@ -470,29 +489,52 @@ export default function AgendaPage() {
         </div>
 
         <aside className="space-y-6">
-          <div className="bg-white rounded-3xl border border-gray-200 p-4 shadow-sm">
-            <h2 className="text-sm font-semibold text-gray-900 mb-3">Próximos agendamentos</h2>
-            <div className="space-y-2 max-h-[400px] overflow-y-auto">
+          <div className="bg-white rounded-3xl border border-gray-200 p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-sm font-bold text-gray-900">Notificações</h2>
+              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-brand-100 text-brand-700 text-xs font-bold">
+                {agendamentosFiltrados.length}
+              </span>
+            </div>
+            <div className="space-y-2 max-h-[600px] overflow-y-auto">
               {loading ? (
-                <div className="flex items-center justify-center py-6">
+                <div className="flex items-center justify-center py-8">
                   <Loader2 className="w-5 h-5 animate-spin text-brand-700" />
                 </div>
               ) : agendamentosFiltrados.length === 0 ? (
-                <p className="text-xs text-gray-500 text-center py-4">Nenhum agendamento</p>
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <AlertCircle className="w-8 h-8 text-gray-300 mb-2" />
+                  <p className="text-sm text-gray-500">Nenhum agendamento</p>
+                </div>
               ) : (
-                agendamentosFiltrados.slice(0, 6).map(agendamento => {
+                agendamentosFiltrados.slice(0, 20).map(agendamento => {
                   const config = statusConfig[agendamento.status as keyof typeof statusConfig]
+                  const clienteName = (agendamento as any).clientes?.nome || 'Cliente'
                   return (
-                    <div key={agendamento.id} className="rounded-2xl bg-gray-50 p-2.5 text-xs border border-gray-100">
-                      <div className="flex items-center justify-between gap-1 mb-1">
-                        <span className="font-medium text-gray-900 truncate">{formatarDataCurta(agendamento.data)}</span>
-                        <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-semibold whitespace-nowrap ${config.bg} ${config.text}`}>
-                          {config.label}
-                        </span>
+                    <div
+                      key={agendamento.id}
+                      className="group flex items-start gap-3 p-3 rounded-2xl bg-gradient-to-r from-gray-50 to-transparent border border-gray-100 hover:border-brand-200 hover:bg-brand-50 transition cursor-pointer"
+                    >
+                      <div className={`flex-shrink-0 w-2 h-2 mt-1.5 rounded-full ${config.bg}`} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="text-xs font-semibold text-gray-900 group-hover:text-brand-700 truncate">
+                              {agendamento.nome_paciente}
+                            </p>
+                            <p className="text-xs text-gray-600 mt-0.5 truncate">{clienteName}</p>
+                          </div>
+                          <span className={`flex-shrink-0 text-[9px] font-bold px-2 py-1 rounded-full whitespace-nowrap ${config.bg} ${config.text}`}>
+                            {config.label}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5 mt-1.5 text-xs text-gray-500">
+                          <Calendar className="w-3 h-3" />
+                          <span>{formatarDataCurta(agendamento.data)}</span>
+                          <Clock className="w-3 h-3 ml-1" />
+                          <span>{formatarHorario(agendamento.horario)}</span>
+                        </div>
                       </div>
-                      <p className="font-medium text-gray-900 truncate">{formatarHorario(agendamento.horario)}</p>
-                      <p className="text-gray-600 truncate">{(agendamento as any).clientes?.nome || 'N/A'}</p>
-                      <p className="text-gray-600 truncate">{agendamento.nome_paciente}</p>
                     </div>
                   )
                 })
