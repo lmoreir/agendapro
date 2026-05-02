@@ -19,10 +19,10 @@ interface StatCardProps {
 }
 
 const colorMap = {
-  indigo: { bg: 'bg-indigo-50',  icon: 'text-indigo-600',  value: 'text-indigo-700' },
-  emerald:{ bg: 'bg-emerald-50', icon: 'text-emerald-600', value: 'text-emerald-700' },
-  sky:    { bg: 'bg-sky-50',     icon: 'text-sky-600',     value: 'text-sky-700'    },
-  violet: { bg: 'bg-violet-50',  icon: 'text-violet-600',  value: 'text-violet-700' },
+  indigo: { bg: 'bg-brand-100', icon: 'text-brand-600', value: 'text-brand-700' },
+  emerald:{ bg: 'bg-brand-100', icon: 'text-brand-600', value: 'text-brand-700' },
+  sky:    { bg: 'bg-brand-100', icon: 'text-brand-600', value: 'text-brand-700' },
+  violet: { bg: 'bg-brand-100', icon: 'text-brand-600', value: 'text-brand-700' },
 }
 
 function StatCard({ label, value, icon: Icon, color }: StatCardProps) {
@@ -43,10 +43,10 @@ function StatCard({ label, value, icon: Icon, color }: StatCardProps) {
 // ─── Status Badge ─────────────────────────────────────────────────────────────
 
 const statusConfig = {
-  agendado:  { label: 'Agendado',   cls: 'bg-blue-50 text-blue-700'   },
-  confirmado:{ label: 'Confirmado', cls: 'bg-green-50 text-green-700' },
-  cancelado: { label: 'Cancelado',  cls: 'bg-red-50 text-red-700'     },
-  realizado: { label: 'Realizado',  cls: 'bg-gray-100 text-gray-600'  },
+  agendado:  { label: 'Agendado',   cls: 'bg-brand-100 text-brand-700'   },
+  confirmado:{ label: 'Confirmado', cls: 'bg-brand-100 text-brand-700' },
+  cancelado: { label: 'Cancelado',  cls: 'bg-brand-100 text-brand-700' },
+  realizado: { label: 'Realizado',  cls: 'bg-brand-100 text-brand-700'  },
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -101,7 +101,7 @@ function AgendamentosHoje({ items, loading }: { items: AgendamentoHoje[]; loadin
                   <td className="px-5 py-3">
                     {ag.clientes ? (
                       <span className="inline-flex items-center gap-1.5">
-                        <span className="bg-indigo-100 text-indigo-700 text-xs font-bold px-1.5 py-0.5 rounded">
+                        <span className="bg-brand-100 text-brand-700 text-xs font-bold px-1.5 py-0.5 rounded">
                           {ag.clientes.sigla}
                         </span>
                         <span className="text-gray-500 hidden xl:inline">{ag.clientes.nome}</span>
@@ -149,7 +149,7 @@ function BarChart({ data, loading }: { data: ClienteBar[]; loading: boolean }) {
             <div key={item.sigla} className="space-y-1">
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className="bg-indigo-100 text-indigo-700 text-xs font-bold px-1.5 py-0.5 rounded flex-shrink-0">
+                  <span className="bg-brand-100 text-brand-700 text-xs font-bold px-1.5 py-0.5 rounded flex-shrink-0">
                     {item.sigla}
                   </span>
                   <span className="text-gray-600 truncate">{item.nome}</span>

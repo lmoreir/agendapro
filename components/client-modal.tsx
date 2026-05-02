@@ -184,7 +184,7 @@ export function ClientModal({ isOpen, onClose, onSuccess, cliente }: ClientModal
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} noValidate className="p-6 space-y-6">
           {/* Row 1: Nome e Sigla */}
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -283,9 +283,17 @@ export function ClientModal({ isOpen, onClose, onSuccess, cliente }: ClientModal
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  errors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                }`}
                 placeholder="cliente@email.com"
               />
+              {errors.email && (
+                <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4" />
+                  {errors.email}
+                </p>
+              )}
             </div>
           </div>
 
@@ -318,6 +326,12 @@ export function ClientModal({ isOpen, onClose, onSuccess, cliente }: ClientModal
                 </label>
               ))}
             </div>
+            {errors.dias_atendimento && (
+              <p className="text-red-600 text-sm mt-2 flex items-center gap-1">
+                <AlertCircle className="w-4 h-4" />
+                {errors.dias_atendimento}
+              </p>
+            )}
           </div>
 
           {/* Row 5: Horários */}
@@ -332,7 +346,9 @@ export function ClientModal({ isOpen, onClose, onSuccess, cliente }: ClientModal
                 value={formData.horario_inicio}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  errors.horarios ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                }`}
               />
             </div>
             <div>
@@ -345,7 +361,9 @@ export function ClientModal({ isOpen, onClose, onSuccess, cliente }: ClientModal
                 value={formData.horario_fim}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  errors.horarios ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                }`}
               />
             </div>
             <div>
@@ -362,6 +380,14 @@ export function ClientModal({ isOpen, onClose, onSuccess, cliente }: ClientModal
                 <option value="inativo">Inativo</option>
               </select>
             </div>
+            {errors.horarios && (
+              <div className="col-span-3">
+                <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4" />
+                  {errors.horarios}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Row 6: Duração e Intervalo */}
@@ -378,8 +404,16 @@ export function ClientModal({ isOpen, onClose, onSuccess, cliente }: ClientModal
                 required
                 min="15"
                 step="15"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  errors.duracao ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                }`}
               />
+              {errors.duracao && (
+                <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4" />
+                  {errors.duracao}
+                </p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">

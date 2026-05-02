@@ -167,7 +167,7 @@ export default function RelatoriosPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-brand-700" />
       </div>
     )
   }
@@ -191,7 +191,7 @@ export default function RelatoriosPage() {
         <button
           onClick={handleExportRelatorio}
           disabled={loading || !stats}
-          className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition font-medium disabled:opacity-50"
+          className="flex items-center gap-2 bg-brand-600 text-white px-4 py-2 rounded-lg hover:bg-brand-700 transition font-medium disabled:opacity-50"
         >
           <Download className="w-5 h-5" />
           Exportar CSV
@@ -208,7 +208,7 @@ export default function RelatoriosPage() {
               <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
             </div>
             <div className="bg-blue-100 p-3 rounded-lg">
-              <Calendar className="w-6 h-6 text-blue-600" />
+              <Calendar className="w-6 h-6 text-brand-700" />
             </div>
           </div>
         </div>
@@ -274,7 +274,7 @@ export default function RelatoriosPage() {
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="flex items-center gap-3 mb-3">
             <div className="bg-blue-100 p-2 rounded">
-              <Clock className="w-5 h-5 text-blue-600" />
+              <Clock className="w-5 h-5 text-brand-700" />
             </div>
             <h3 className="font-medium text-gray-900">Pendentes</h3>
           </div>
@@ -369,7 +369,7 @@ export default function RelatoriosPage() {
                         <div className="flex items-center gap-2">
                           <div className="w-16 bg-gray-200 rounded-full h-2">
                             <div
-                              className="bg-blue-600 h-2 rounded-full"
+                              className="bg-brand-600 h-2 rounded-full"
                               style={{ width: `${taxaConfirmacao}%` }}
                             ></div>
                           </div>

@@ -67,6 +67,7 @@ export default function AgendaPage() {
       setAgendamentos(agendamentosRes.data as Agendamento[] || [])
     } catch (error) {
       console.error('Erro ao carregar dados:', error)
+      addToast('Erro ao carregar agendamentos', 'error')
     } finally {
       setLoading(false)
     }
@@ -123,9 +124,10 @@ export default function AgendaPage() {
 
       const filename = `agendamentos-${new Date().toISOString().split('T')[0]}`
       exportAgendamentosToCSV(agendamentosFiltrados, filename)
+      addToast('Agendamentos exportados com sucesso!', 'success')
     } catch (error) {
       console.error('Erro ao exportar:', error)
-      alert('Erro ao exportar agendamentos')
+      addToast('Erro ao exportar agendamentos', 'error')
     }
   }
 
@@ -172,20 +174,19 @@ export default function AgendaPage() {
           <button
             onClick={handleExportAgendamentos}
             disabled={loading || agendamentosFiltrados.length === 0}
-            className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 bg-brand-600 text-white px-4 py-2 rounded-lg hover:bg-brand-700 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Download className="w-5 h-5" />
             Exportar CSV
           </button>
           <button
             onClick={handleNovoAgendamento}
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-medium"
+            className="flex items-center gap-2 bg-brand-600 text-white px-4 py-2 rounded-lg hover:bg-brand-700 transition font-medium"
           >
             <Plus className="w-5 h-5" />
             Novo Agendamento
           </button>
         </div>
-      </div>
       </div>
 
       {/* Filtros */}
@@ -250,7 +251,7 @@ export default function AgendaPage() {
       {/* Loading State */}
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+          <Loader2 className="w-8 h-8 animate-spin text-brand-700" />
         </div>
       ) : agendamentosFiltrados.length === 0 ? (
         /* Empty State */
@@ -266,7 +267,7 @@ export default function AgendaPage() {
           </p>
           <button
             onClick={handleNovoAgendamento}
-            className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-medium"
+            className="inline-flex items-center gap-2 bg-brand-600 text-white px-4 py-2 rounded-lg hover:bg-brand-700 transition font-medium"
           >
             <Plus className="w-5 h-5" />
             Novo Agendamento
@@ -357,7 +358,7 @@ export default function AgendaPage() {
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => handleEditAgendamento(agendamento)}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded transition"
+                            className="p-2 text-brand-700 hover:bg-brand-100 rounded transition"
                             title="Editar"
                           >
                             <Edit2 className="w-4 h-4" />

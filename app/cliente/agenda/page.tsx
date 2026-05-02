@@ -5,6 +5,7 @@ import { Loader2, AlertCircle, Calendar, Clock, User, Phone } from 'lucide-react
 import { Agendamento, Cliente } from '@/types'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
+import { useToast } from '@/hooks/useToast'
 
 const statusConfig = {
   agendado: { label: 'Agendado', bg: 'bg-blue-100', text: 'text-blue-800' },
@@ -24,6 +25,7 @@ export default function ClienteAgendaPage() {
   const [loading, setLoading] = useState(true)
 
   const supabase = createClient()
+  const { addToast } = useToast()
 
   useEffect(() => {
     const loadData = async () => {
@@ -55,6 +57,7 @@ export default function ClienteAgendaPage() {
         setAgendamentos(agendamentosData || [])
       } catch (error) {
         console.error('Erro ao carregar dados:', error)
+        addToast('Erro ao carregar agendamentos', 'error')
       } finally {
         setLoading(false)
       }
@@ -79,7 +82,7 @@ export default function ClienteAgendaPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-brand-700" />
       </div>
     )
   }
@@ -103,7 +106,7 @@ export default function ClienteAgendaPage() {
             </div>
             <div>
               <p className="text-sm text-gray-600 mb-1">Sigla</p>
-              <p className="text-lg font-semibold text-blue-600">{cliente.sigla}</p>
+              <p className="text-lg font-semibold text-brand-700">{cliente.sigla}</p>
             </div>
           </div>
         </div>

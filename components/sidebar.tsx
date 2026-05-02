@@ -29,9 +29,9 @@ export function Sidebar() {
   const pathname = usePathname()
 
   return (
-    <aside className="w-60 min-h-screen bg-gray-900 flex flex-col">
-      <div className="px-6 py-5 border-b border-gray-700/60">
-        <span className="text-white text-xl font-bold tracking-tight">AgendaPro</span>
+    <aside className="w-60 min-h-screen bg-brand-900 flex flex-col">
+      <div className="px-6 py-5 border-b border-brand-700/60">
+        <span className="text-brand-50 text-xl font-bold tracking-tight">AgendaPro</span>
       </div>
 
       <nav className="flex-1 px-3 py-4 space-y-0.5">
@@ -43,8 +43,8 @@ export function Sidebar() {
               href={href}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 active
-                  ? 'bg-indigo-600 text-white'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                  ? 'bg-brand-600 text-white'
+                  : 'text-brand-100 hover:text-white hover:bg-brand-700'
               }`}
             >
               <Icon className="w-5 h-5 flex-shrink-0" />

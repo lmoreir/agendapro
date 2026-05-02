@@ -24,8 +24,8 @@ export default function HomePage() {
   }, [isAuthenticated, role, loading, router])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-600 to-indigo-900 flex items-center justify-center">
-      <Loader2 className="w-8 h-8 animate-spin text-white" />
+    <div className="min-h-screen bg-gradient-to-br from-brand-500 to-brand-800 flex items-center justify-center">
+      <Loader2 className="w-8 h-8 animate-spin text-brand-50" />
     </div>
   )
 }

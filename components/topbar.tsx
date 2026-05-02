@@ -32,8 +32,8 @@ export function Topbar() {
   }
 
   return (
-    <header className="bg-white border-b border-gray-200 px-6 h-16 flex items-center justify-between flex-shrink-0 gap-4">
-      <h1 className="text-lg font-semibold text-gray-900">{title}</h1>
+    <header className="bg-brand-50 border-b border-brand-100 px-6 h-16 flex items-center justify-between flex-shrink-0 gap-4">
+      <h1 className="text-lg font-semibold text-brand-900">{title}</h1>
 
       {/* Search (visible em todas páginas) */}
       <div className="flex-1 max-w-xs">
@@ -44,7 +44,7 @@ export function Topbar() {
         {action && (
           <button
             onClick={() => router.push(action.href)}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+            className="flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
           >
             <Plus className="w-4 h-4" />
             {action.label}
@@ -52,7 +52,7 @@ export function Topbar() {
         )}
         <button
           onClick={handleLogout}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 text-sm font-medium px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+          className="flex items-center gap-2 text-brand-800 hover:text-brand-900 text-sm font-medium px-3 py-2 rounded-lg hover:bg-brand-100 transition-colors"
           title="Sair"
         >
           <LogOut className="w-4 h-4" />

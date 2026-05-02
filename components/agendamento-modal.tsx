@@ -150,7 +150,7 @@ export function AgendamentoModal({
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} noValidate className="p-6 space-y-6">
           {/* Row 1: Cliente e Tipo */}
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -162,7 +162,9 @@ export function AgendamentoModal({
                 value={formData.cliente_id}
                 onChange={(e) => handleClienteChange(e.target.value)}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  errors.cliente_id ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                }`}
               >
                 <option value="">Selecione um cliente</option>
                 {clientes.map(cliente => (
@@ -171,6 +173,12 @@ export function AgendamentoModal({
                   </option>
                 ))}
               </select>
+              {errors.cliente_id && (
+                <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4" />
+                  {errors.cliente_id}
+                </p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -182,9 +190,17 @@ export function AgendamentoModal({
                 value={formData.tipo_atendimento}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  errors.tipo_atendimento ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                }`}
                 placeholder="Ex: Consulta, Procedimento"
               />
+              {errors.tipo_atendimento && (
+                <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4" />
+                  {errors.tipo_atendimento}
+                </p>
+              )}
             </div>
           </div>
 
@@ -199,9 +215,17 @@ export function AgendamentoModal({
               value={formData.nome_paciente}
               onChange={handleInputChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                errors.nome_paciente ? 'border-red-300 bg-red-50' : 'border-gray-300'
+              }`}
               placeholder="Nome completo"
             />
+            {errors.nome_paciente && (
+              <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+                <AlertCircle className="w-4 h-4" />
+                {errors.nome_paciente}
+              </p>
+            )}
           </div>
 
           {/* Row 3: WhatsApp Paciente */}
@@ -215,9 +239,17 @@ export function AgendamentoModal({
               value={formData.whatsapp_paciente}
               onChange={handleInputChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                errors.whatsapp_paciente ? 'border-red-300 bg-red-50' : 'border-gray-300'
+              }`}
               placeholder="11 99999-9999"
             />
+            {errors.whatsapp_paciente && (
+              <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+                <AlertCircle className="w-4 h-4" />
+                {errors.whatsapp_paciente}
+              </p>
+            )}
           </div>
 
           {/* Row 4: Data e Horário */}
@@ -232,8 +264,16 @@ export function AgendamentoModal({
                 value={formData.data}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  errors.data ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                }`}
               />
+              {errors.data && (
+                <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4" />
+                  {errors.data}
+                </p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -245,8 +285,16 @@ export function AgendamentoModal({
                 value={formData.horario}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  errors.horario ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                }`}
               />
+              {errors.horario && (
+                <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4" />
+                  {errors.horario}
+                </p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">

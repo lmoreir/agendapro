@@ -12,6 +12,7 @@ import {
 import { Agendamento, Cliente } from '@/types'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
+import { useToast } from '@/hooks/useToast'
 
 interface EstatisticasRelatorio {
   total: number
@@ -39,6 +40,7 @@ export default function ClienteRelatorioPage() {
   const [loading, setLoading] = useState(true)
 
   const supabase = createClient()
+  const { addToast } = useToast()
 
   useEffect(() => {
     const loadData = async () => {
@@ -123,6 +125,7 @@ export default function ClienteRelatorioPage() {
         setAgendamentosPorMes(mesesArray)
       } catch (error) {
         console.error('Erro ao carregar relatório:', error)
+        addToast('Erro ao carregar relatório', 'error')
       } finally {
         setLoading(false)
       }
@@ -134,7 +137,7 @@ export default function ClienteRelatorioPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-brand-700" />
       </div>
     )
   }
@@ -159,7 +162,7 @@ export default function ClienteRelatorioPage() {
               <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
             </div>
             <div className="bg-blue-100 p-3 rounded-lg">
-              <Calendar className="w-6 h-6 text-blue-600" />
+              <Calendar className="w-6 h-6 text-brand-700" />
             </div>
           </div>
         </div>
@@ -225,7 +228,7 @@ export default function ClienteRelatorioPage() {
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="flex items-center gap-3 mb-3">
             <div className="bg-blue-100 p-2 rounded">
-              <Clock className="w-5 h-5 text-blue-600" />
+              <Clock className="w-5 h-5 text-brand-700" />
             </div>
             <h3 className="font-medium text-gray-900">Pendentes</h3>
           </div>
@@ -309,7 +312,7 @@ export default function ClienteRelatorioPage() {
                         <div className="flex items-center gap-2">
                           <div className="w-16 bg-gray-200 rounded-full h-2">
                             <div
-                              className="bg-blue-600 h-2 rounded-full"
+                              className="bg-brand-600 h-2 rounded-full"
                               style={{ width: `${taxaConfirmacaoMes}%` }}
                             ></div>
                           </div>

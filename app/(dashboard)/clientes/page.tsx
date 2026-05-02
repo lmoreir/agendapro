@@ -41,6 +41,7 @@ export default function ClientesPage() {
       setClientes(data || [])
     } catch (error) {
       console.error('Erro ao carregar clientes:', error)
+      addToast('Erro ao carregar clientes', 'error')
     } finally {
       setLoading(false)
     }
@@ -99,9 +100,10 @@ export default function ClientesPage() {
       }))
 
       exportToCSV(data, `clientes-${new Date().toISOString().split('T')[0]}`)
+      addToast('Clientes exportados com sucesso!', 'success')
     } catch (error) {
       console.error('Erro ao exportar:', error)
-      alert('Erro ao exportar clientes')
+      addToast('Erro ao exportar clientes', 'error')
     }
   }
 
@@ -140,14 +142,14 @@ export default function ClientesPage() {
           <button
             onClick={handleExportClientes}
             disabled={loading || clientes.length === 0}
-            className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 bg-brand-600 text-white px-4 py-2 rounded-lg hover:bg-brand-700 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Download className="w-5 h-5" />
             Exportar CSV
           </button>
           <button
             onClick={handleNovoClient}
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-medium"
+            className="flex items-center gap-2 bg-brand-600 text-white px-4 py-2 rounded-lg hover:bg-brand-700 transition font-medium"
           >
             <Plus className="w-5 h-5" />
             Novo Cliente
@@ -158,7 +160,7 @@ export default function ClientesPage() {
       {/* Loading State */}
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+          <Loader2 className="w-8 h-8 animate-spin text-brand-700" />
         </div>
       ) : clientes.length === 0 ? (
         /* Empty State */
@@ -172,7 +174,7 @@ export default function ClientesPage() {
           </p>
           <button
             onClick={handleNovoClient}
-            className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-medium"
+            className="inline-flex items-center gap-2 bg-brand-600 text-white px-4 py-2 rounded-lg hover:bg-brand-700 transition font-medium"
           >
             <Plus className="w-5 h-5" />
             Criar Primeiro Cliente
@@ -214,11 +216,11 @@ export default function ClientesPage() {
               {/* Card Body */}
               <div className="p-6 space-y-4">
                 {/* Sigla */}
-                <div className="bg-blue-50 rounded-lg p-3 text-center">
+                <div className="bg-brand-100 rounded-lg p-3 text-center">
                   <p className="text-xs text-gray-600 uppercase tracking-wider mb-1">
                     Sigla
                   </p>
-                  <p className="text-xl font-bold text-blue-600">
+                  <p className="text-xl font-bold text-brand-700">
                     {cliente.sigla}
                   </p>
                 </div>
@@ -300,7 +302,7 @@ export default function ClientesPage() {
               <div className="px-6 py-4 border-t border-gray-100 flex gap-2">
                 <button
                   onClick={() => handleEditClient(cliente)}
-                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 font-medium transition"
+                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-brand-700 border border-brand-100 rounded-lg hover:bg-brand-100 font-medium transition"
                 >
                   <Edit2 className="w-4 h-4" />
                   Editar
