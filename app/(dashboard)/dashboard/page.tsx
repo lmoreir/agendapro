@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useDashboard, type AgendamentoHoje, type ClienteBar } from '@/hooks/useDashboard'
 import {
@@ -9,8 +9,6 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 
-// ─── Stat Card ───────────────────────────────────────────────────────────────
-
 interface StatCardProps {
   label: string
   value: string | number
@@ -20,16 +18,16 @@ interface StatCardProps {
 
 const colorMap = {
   indigo: { bg: 'bg-brand-100', icon: 'text-brand-600', value: 'text-brand-700' },
-  emerald:{ bg: 'bg-brand-100', icon: 'text-brand-600', value: 'text-brand-700' },
-  sky:    { bg: 'bg-brand-100', icon: 'text-brand-600', value: 'text-brand-700' },
-  violet: { bg: 'bg-brand-100', icon: 'text-brand-600', value: 'text-brand-700' },
+  emerald: { bg: 'bg-emerald-100', icon: 'text-emerald-600', value: 'text-emerald-700' },
+  sky: { bg: 'bg-sky-100', icon: 'text-sky-600', value: 'text-sky-700' },
+  violet: { bg: 'bg-violet-100', icon: 'text-violet-600', value: 'text-violet-700' },
 }
 
 function StatCard({ label, value, icon: Icon, color }: StatCardProps) {
   const c = colorMap[color]
   return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
-      <div className={`${c.bg} rounded-lg p-3 flex-shrink-0`}>
+    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
+      <div className={`${c.bg} rounded-2xl p-3 flex-shrink-0`}>
         <Icon className={`w-6 h-6 ${c.icon}`} />
       </div>
       <div>
@@ -40,13 +38,11 @@ function StatCard({ label, value, icon: Icon, color }: StatCardProps) {
   )
 }
 
-// ─── Status Badge ─────────────────────────────────────────────────────────────
-
 const statusConfig = {
-  agendado:  { label: 'Agendado',   cls: 'bg-brand-100 text-brand-700'   },
-  confirmado:{ label: 'Confirmado', cls: 'bg-brand-100 text-brand-700' },
-  cancelado: { label: 'Cancelado',  cls: 'bg-brand-100 text-brand-700' },
-  realizado: { label: 'Realizado',  cls: 'bg-brand-100 text-brand-700'  },
+  agendado: { label: 'Agendado', cls: 'bg-brand-100 text-brand-700' },
+  confirmado: { label: 'Confirmado', cls: 'bg-brand-100 text-brand-700' },
+  cancelado: { label: 'Cancelado', cls: 'bg-brand-100 text-brand-700' },
+  realizado: { label: 'Realizado', cls: 'bg-brand-100 text-brand-700' },
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -58,11 +54,9 @@ function StatusBadge({ status }: { status: string }) {
   )
 }
 
-// ─── Agendamentos List ────────────────────────────────────────────────────────
-
 function AgendamentosHoje({ items, loading }: { items: AgendamentoHoje[]; loading: boolean }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm flex flex-col lg:col-span-2">
+    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm flex flex-col lg:col-span-2">
       <div className="px-5 py-4 border-b border-gray-100">
         <h2 className="font-semibold text-gray-800">Agendamentos de hoje</h2>
         <p className="text-xs text-gray-400 mt-0.5">
@@ -94,24 +88,18 @@ function AgendamentosHoje({ items, loading }: { items: AgendamentoHoje[]; loadin
             <tbody className="divide-y divide-gray-50">
               {items.map(ag => (
                 <tr key={ag.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-5 py-3 font-mono text-gray-700 font-medium">
-                    {ag.horario.slice(0, 5)}
-                  </td>
+                  <td className="px-5 py-3 font-mono text-gray-700 font-medium">{ag.horario.slice(0, 5)}</td>
                   <td className="px-5 py-3 text-gray-800">{ag.nome_paciente}</td>
                   <td className="px-5 py-3">
                     {ag.clientes ? (
                       <span className="inline-flex items-center gap-1.5">
-                        <span className="bg-brand-100 text-brand-700 text-xs font-bold px-1.5 py-0.5 rounded">
-                          {ag.clientes.sigla}
-                        </span>
+                        <span className="bg-brand-100 text-brand-700 text-xs font-bold px-1.5 py-0.5 rounded">{ag.clientes.sigla}</span>
                         <span className="text-gray-500 hidden xl:inline">{ag.clientes.nome}</span>
                       </span>
                     ) : '—'}
                   </td>
                   <td className="px-5 py-3 text-gray-600">{ag.tipo_atendimento}</td>
-                  <td className="px-5 py-3">
-                    <StatusBadge status={ag.status} />
-                  </td>
+                  <td className="px-5 py-3"><StatusBadge status={ag.status} /></td>
                 </tr>
               ))}
             </tbody>
@@ -122,13 +110,11 @@ function AgendamentosHoje({ items, loading }: { items: AgendamentoHoje[]; loadin
   )
 }
 
-// ─── Bar Chart ────────────────────────────────────────────────────────────────
-
 function BarChart({ data, loading }: { data: ClienteBar[]; loading: boolean }) {
   const max = Math.max(...data.map(d => d.total), 1)
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm flex flex-col">
+    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm flex flex-col">
       <div className="px-5 py-4 border-b border-gray-100">
         <h2 className="font-semibold text-gray-800">Agendamentos por cliente</h2>
         <p className="text-xs text-gray-400 mt-0.5">Mês atual</p>
@@ -149,18 +135,13 @@ function BarChart({ data, loading }: { data: ClienteBar[]; loading: boolean }) {
             <div key={item.sigla} className="space-y-1">
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className="bg-brand-100 text-brand-700 text-xs font-bold px-1.5 py-0.5 rounded flex-shrink-0">
-                    {item.sigla}
-                  </span>
+                  <span className="bg-brand-100 text-brand-700 text-xs font-bold px-1.5 py-0.5 rounded flex-shrink-0">{item.sigla}</span>
                   <span className="text-gray-600 truncate">{item.nome}</span>
                 </div>
                 <span className="font-semibold text-gray-800 ml-3 flex-shrink-0">{item.total}</span>
               </div>
               <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-indigo-500 rounded-full transition-all duration-500"
-                  style={{ width: `${(item.total / max) * 100}%` }}
-                />
+                <div className="h-full bg-indigo-500 rounded-full transition-all duration-500" style={{ width: `${(item.total / max) * 100}%` }} />
               </div>
             </div>
           ))}
@@ -170,8 +151,6 @@ function BarChart({ data, loading }: { data: ClienteBar[]; loading: boolean }) {
   )
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
 export default function DashboardPage() {
   const { stats, proximosHoje, barChart, loading } = useDashboard()
 
@@ -179,31 +158,51 @@ export default function DashboardPage() {
     {
       label: 'Agendamentos hoje',
       value: loading ? '...' : stats.agendamentosHoje,
-      icon:  CalendarCheck,
+      icon: CalendarCheck,
       color: 'indigo',
     },
     {
       label: 'Clientes ativos',
       value: loading ? '...' : stats.clientesAtivos,
-      icon:  Users,
+      icon: Users,
       color: 'emerald',
     },
     {
       label: 'Esta semana',
       value: loading ? '...' : stats.estaSemana,
-      icon:  TrendingUp,
+      icon: TrendingUp,
       color: 'sky',
     },
     {
       label: 'Taxa de confirmação',
       value: loading ? '...' : `${stats.taxaConfirmacao}%`,
-      icon:  CheckCircle,
+      icon: CheckCircle,
       color: 'violet',
     },
   ]
 
   return (
     <div className="space-y-6">
+      <section className="rounded-[2rem] bg-gradient-to-r from-brand-700 to-brand-900 text-white overflow-hidden shadow-[0_30px_90px_-40px_rgba(17,24,39,0.65)]">
+        <div className="px-6 py-8 sm:px-10 sm:py-10">
+          <p className="text-sm uppercase tracking-[0.36em] text-brand-200/80">Painel</p>
+          <h1 className="mt-4 text-3xl sm:text-4xl font-semibold tracking-tight">Controle sua agenda com clareza</h1>
+          <p className="mt-4 max-w-2xl text-sm text-brand-100/90 leading-6">
+            Acompanhe hoje os agendamentos, visualize os clientes mais ativos e mantenha o foco nas prioridades do seu consultório.
+          </p>
+        </div>
+        <div className="grid gap-4 px-6 pb-8 sm:grid-cols-2 sm:px-10">
+          <div className="rounded-3xl bg-white/10 border border-white/15 p-5">
+            <p className="text-sm text-brand-100 mb-2">Agendamentos hoje</p>
+            <p className="text-3xl font-semibold">{loading ? '...' : stats.agendamentosHoje}</p>
+          </div>
+          <div className="rounded-3xl bg-white/10 border border-white/15 p-5">
+            <p className="text-sm text-brand-100 mb-2">Clientes ativos</p>
+            <p className="text-3xl font-semibold">{loading ? '...' : stats.clientesAtivos}</p>
+          </div>
+        </div>
+      </section>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
         {cards.map(card => (
           <StatCard key={card.label} {...card} />
