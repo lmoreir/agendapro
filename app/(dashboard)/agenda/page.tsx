@@ -291,6 +291,8 @@ export default function AgendaPage() {
                 </div>
               </div>
             </div>
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row">
             <button
               onClick={handleExportAgendamentos}
               disabled={loading || agendamentosFiltrados.length === 0}
