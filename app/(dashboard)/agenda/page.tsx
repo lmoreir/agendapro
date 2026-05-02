@@ -38,7 +38,6 @@ export default function AgendaPage() {
   const [deleting, setDeleting] = useState<string | null>(null)
 
   const [filterClienteId, setFilterClienteId] = useState('')
-  const [filterData, setFilterData] = useState(new Date().toISOString().split('T')[0])
   const [filterStatus, setFilterStatus] = useState('')
   const [calendarView, setCalendarView] = useState<'week' | 'month'>('week')
   const [currentDate, setCurrentDate] = useState(new Date())
@@ -173,11 +172,10 @@ export default function AgendaPage() {
     () =>
       agendamentos.filter(a => {
         if (filterClienteId && a.cliente_id !== filterClienteId) return false
-        if (filterData && a.data !== filterData) return false
         if (filterStatus && a.status !== filterStatus) return false
         return true
       }),
-    [agendamentos, filterClienteId, filterData, filterStatus]
+    [agendamentos, filterClienteId, filterStatus]
   )
 
   const appointmentsTodayCount = useMemo(
@@ -332,7 +330,7 @@ export default function AgendaPage() {
             {calendarView === 'week' ? (
               <div className="grid grid-cols-1 gap-3 md:grid-cols-7">
                 {weekDates.map(date => {
-                  const events = agendamentos.filter(agendamento => {
+                  const events = agendamentosFiltrados.filter(agendamento => {
                     const eventDate = new Date(agendamento.data + 'T00:00:00')
                     return isSameDay(eventDate, date)
                   })
@@ -377,7 +375,7 @@ export default function AgendaPage() {
                 {monthRows.map((week, rowIndex) => (
                   <div key={rowIndex} className="space-y-2">
                     {week.map(day => {
-                      const events = agendamentos.filter(agendamento => {
+                      const events = agendamentosFiltrados.filter(agendamento => {
                         const eventDate = new Date(agendamento.data + 'T00:00:00')
                         return isSameDay(eventDate, day)
                       })
