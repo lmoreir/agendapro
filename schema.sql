@@ -89,3 +89,30 @@ create policy "Autenticados podem inserir agendamentos"
 create policy "Autenticados podem atualizar agendamentos"
   on public.agendamentos for update
   using (auth.role() = 'authenticated');
+
+-- =====================================================
+-- Tabela: usuarios
+-- =====================================================
+create table if not exists public.usuarios (
+  id          uuid primary key default gen_random_uuid(),
+  email       text unique not null,
+  senha       text not null,
+  role        text not null default 'cliente'
+                check (role in ('admin', 'cliente')),
+  cliente_id  uuid references public.clientes(id) on delete cascade,
+  nome        text not null,
+  status      text not null default 'ativo'
+                check (status in ('ativo', 'inativo')),
+  created_at  timestamptz not null default now()
+);
+
+alter table public.usuarios enable row level security;
+
+create policy "Usuarios acessivel via anon"
+  on public.usuarios for all
+  using (true) with check (true);
+
+-- Seed: admin padrão (execute no Supabase SQL Editor)
+-- insert into public.usuarios (email, senha, role, nome) values
+--   ('admin@agendapro.com', 'admin123', 'admin', 'Administrador')
+-- on conflict (email) do nothing;

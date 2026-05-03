@@ -4,37 +4,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Loader2, AlertCircle } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+import { createClient } from '@/lib/supabase/client'
 import type { User } from '@/types'
-
-// Mock de usuários (em produção, viria do Supabase com autenticação real)
-const MOCK_USERS: User[] = [
-  {
-    id: '1',
-    email: 'admin@agendapro.com',
-    senha: 'admin123',
-    role: 'admin',
-    nome: 'Administrador',
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: '2',
-    email: 'clinica@agendapro.com',
-    senha: 'clinica123',
-    role: 'cliente',
-    cliente_id: 'abc-123', // ID do cliente do Supabase
-    nome: 'Clínica Saúde',
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: '3',
-    email: 'consultorio@agendapro.com',
-    senha: 'consultorio123',
-    role: 'cliente',
-    cliente_id: 'def-456',
-    nome: 'Consultório Dr. Silva',
-    created_at: new Date().toISOString(),
-  },
-]
 
 export default function LoginPage() {
   const router = useRouter()
@@ -43,6 +14,8 @@ export default function LoginPage() {
   const [senha, setSenha] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  const supabase = createClient()
 
   // Se já autenticado, redirecionar
   useEffect(() => {
@@ -57,20 +30,22 @@ export default function LoginPage() {
     setError('')
 
     try {
-      // Simular delay de requisição
-      await new Promise(resolve => setTimeout(resolve, 500))
+      const { data, error } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('email', email.trim().toLowerCase())
+        .eq('senha', senha)
+        .eq('status', 'ativo')
+        .single()
 
-      // Buscar usuário (em produção, seria uma chamada ao Supabase)
-      const user = MOCK_USERS.find(u => u.email === email && u.senha === senha)
-
-      if (!user) {
+      if (error || !data) {
         setError('Email ou senha incorretos')
         setLoading(false)
         return
       }
 
-      login(user)
-    } catch (err) {
+      login(data as User)
+    } catch {
       setError('Erro ao fazer login. Tente novamente.')
       setLoading(false)
     }
@@ -141,23 +116,6 @@ export default function LoginPage() {
               {loading ? 'Entrando...' : 'Entrar'}
             </button>
           </form>
-
-          {/* Demo Info */}
-          <div className="mt-8 pt-8 border-t border-gray-200">
-            <p className="text-sm text-gray-600 font-medium mb-3">Contas de Teste:</p>
-            <div className="space-y-2 text-xs text-gray-600">
-              <div>
-                <p className="font-medium text-gray-700">Admin:</p>
-                <p>Email: admin@agendapro.com</p>
-                <p>Senha: admin123</p>
-              </div>
-              <div>
-                <p className="font-medium text-gray-700">Cliente:</p>
-                <p>Email: clinica@agendapro.com</p>
-                <p>Senha: clinica123</p>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>

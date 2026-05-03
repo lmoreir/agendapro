@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { CalendarDays, BarChart3, LogOut, type LucideIcon } from 'lucide-react'
+import { CalendarDays, BarChart3, LogOut, LayoutDashboard, type LucideIcon } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 
 type NavItem = {
@@ -12,8 +12,9 @@ type NavItem = {
 }
 
 const navItems: NavItem[] = [
-  { href: '/cliente/agenda', label: 'Minha Agenda', icon: CalendarDays },
-  { href: '/cliente/relatorio', label: 'Relatório', icon: BarChart3 },
+  { href: '/cliente/dashboard', label: 'Dashboard',    icon: LayoutDashboard },
+  { href: '/cliente/agenda',    label: 'Minha Agenda', icon: CalendarDays },
+  { href: '/cliente/relatorio', label: 'Relatório',    icon: BarChart3 },
 ]
 
 export function ClienteSidebar() {

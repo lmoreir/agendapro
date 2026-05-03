@@ -1,10 +1,11 @@
 ﻿'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { Plus, Loader2, Trash2, Edit2, AlertCircle, Download } from 'lucide-react'
+import { Plus, Loader2, Trash2, Edit2, AlertCircle, Download, KeyRound } from 'lucide-react'
 import { Cliente } from '@/types'
 import { createClient } from '@/lib/supabase/client'
 import { ClientModal } from '@/components/client-modal'
+import { ClienteAcessoModal } from '@/components/cliente-acesso-modal'
 import { exportToCSV } from '@/lib/export'
 import { useToast } from '@/hooks/useToast'
 
@@ -24,6 +25,7 @@ export default function ClientesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedCliente, setSelectedCliente] = useState<Cliente | null>(null)
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [acessoCliente, setAcessoCliente] = useState<Cliente | null>(null)
 
   const supabase = createClient()
   const { addToast } = useToast()
@@ -272,6 +274,13 @@ export default function ClientesPage() {
                   Editar
                 </button>
                 <button
+                  onClick={() => setAcessoCliente(cliente)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-brand-700 border border-brand-200 bg-brand-50 rounded-lg hover:bg-brand-100 transition"
+                >
+                  <KeyRound className="w-3.5 h-3.5" />
+                  Acesso
+                </button>
+                <button
                   onClick={() => handleDeleteClient(cliente.id)}
                   disabled={deleting === cliente.id}
                   className="flex-1 inline-flex items-center justify-center gap-2 rounded-3xl border border-red-200 px-3 py-2 text-red-600 hover:bg-red-50 transition font-medium disabled:opacity-50"
@@ -295,6 +304,15 @@ export default function ClientesPage() {
         onSuccess={loadClientes}
         cliente={selectedCliente}
       />
+
+      {acessoCliente && (
+        <ClienteAcessoModal
+          isOpen={!!acessoCliente}
+          onClose={() => setAcessoCliente(null)}
+          onSuccess={() => setAcessoCliente(null)}
+          cliente={acessoCliente}
+        />
+      )}
     </div>
   )
 }
