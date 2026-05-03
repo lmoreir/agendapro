@@ -616,63 +616,79 @@ export default function AgendaPage() {
                 </div>
               )
             })() : (
-              <div className="grid grid-cols-7 gap-2">
-                {monthRows.map((week, rowIndex) => (
-                  <div key={rowIndex} className="space-y-2">
-                    {week.map(day => {
-                      const events = agendamentosFiltrados.filter(agendamento => {
-                        const eventDate = new Date(agendamento.data + 'T00:00:00')
-                        return isSameDay(eventDate, day)
-                      })
-                      const isCurrentMonth = day.getMonth() === currentDate.getMonth()
-                      return (
-                        <div
-                          key={day.toISOString()}
-                          className={`rounded-2xl border p-2 min-h-[140px] flex flex-col ${
-                            isCurrentMonth ? 'border-gray-200 bg-white' : 'border-gray-100 bg-gray-50 text-gray-400'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <span className={`text-sm font-bold ${isCurrentMonth ? 'text-gray-900' : 'text-gray-400'}`}>
-                              {day.getDate()}
+              <div>
+                {/* Cabeçalho dos dias da semana */}
+                <div className="grid grid-cols-7 gap-1 mb-1">
+                  {['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'].map(d => (
+                    <div key={d} className="text-center text-xs font-semibold text-gray-400 py-1 uppercase tracking-wide">
+                      {d}
+                    </div>
+                  ))}
+                </div>
+                {/* Grade de dias — flui da esquerda para direita */}
+                <div className="grid grid-cols-7 gap-1">
+                  {monthDates.map(day => {
+                    const events = agendamentosFiltrados.filter(agendamento => {
+                      const eventDate = new Date(agendamento.data + 'T00:00:00')
+                      return isSameDay(eventDate, day)
+                    })
+                    const isCurrentMonth = day.getMonth() === currentDate.getMonth()
+                    const isToday = isSameDay(day, new Date())
+                    return (
+                      <div
+                        key={day.toISOString()}
+                        className={`rounded-xl border p-1.5 min-h-[90px] flex flex-col ${
+                          isCurrentMonth ? 'border-gray-200 bg-white' : 'border-gray-100 bg-gray-50'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span
+                            className={`text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full ${
+                              isToday
+                                ? 'bg-brand-600 text-white'
+                                : isCurrentMonth
+                                  ? 'text-gray-900'
+                                  : 'text-gray-300'
+                            }`}
+                          >
+                            {day.getDate()}
+                          </span>
+                          {events.length > 0 && (
+                            <span className="rounded-full bg-brand-100 px-1 py-0.5 text-[9px] font-bold text-brand-800">
+                              {events.length}
                             </span>
-                            {events.length > 0 && (
-                              <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-bold text-brand-800">
-                                {events.length}
-                              </span>
-                            )}
-                          </div>
-                          <div className="space-y-1 text-[11px] flex-1 overflow-hidden">
-                            {events.slice(0, 3).map(ev => {
-                              const config = statusConfig[ev.status as keyof typeof statusConfig]
-                              const clienteName = (ev as any).clientes?.nome || ''
-                              return (
-                                <div
-                                  key={ev.id}
-                                  className={`rounded p-1.5 border-l-2 cursor-pointer hover:brightness-95 transition-all ${
-                                    isCurrentMonth
-                                      ? `${config.bg} ${config.border}`
-                                      : 'bg-gray-100 border-gray-300 text-gray-500'
-                                  }`}
-                                  onClick={e => handleCardClick(ev, e)}
-                                >
-                                  <p className={`font-bold truncate ${isCurrentMonth ? config.text : ''}`}>{formatarHorario(ev.horario)}</p>
-                                  <p className="truncate text-gray-800">{ev.nome_paciente}</p>
-                                  {clienteName && <p className="text-[9px] truncate text-gray-600">{clienteName}</p>}
-                                </div>
-                              )
-                            })}
-                            {events.length > 3 && (
-                              <p className="text-[10px] text-gray-500 font-medium px-1.5">
-                                +{events.length - 3} mais
-                              </p>
-                            )}
-                          </div>
+                          )}
                         </div>
-                      )
-                    })}
-                  </div>
-                ))}
+                        <div className="space-y-0.5 text-[10px] flex-1 overflow-hidden">
+                          {events.slice(0, 3).map(ev => {
+                            const config = statusConfig[ev.status as keyof typeof statusConfig]
+                            return (
+                              <div
+                                key={ev.id}
+                                className={`rounded px-1 py-0.5 border-l-2 cursor-pointer hover:brightness-95 transition-all truncate ${
+                                  isCurrentMonth
+                                    ? `${config.bg} ${config.border}`
+                                    : 'bg-gray-100 border-gray-200 text-gray-400'
+                                }`}
+                                onClick={e => handleCardClick(ev, e)}
+                              >
+                                <span className={`font-bold mr-1 ${isCurrentMonth ? config.text : ''}`}>
+                                  {formatarHorario(ev.horario)}
+                                </span>
+                                <span className="text-gray-700 truncate">{ev.nome_paciente}</span>
+                              </div>
+                            )
+                          })}
+                          {events.length > 3 && (
+                            <p className="text-[9px] text-gray-400 font-medium px-1">
+                              +{events.length - 3} mais
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
             )}
           </div>
