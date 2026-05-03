@@ -31,6 +31,15 @@ export function Topbar() {
     logout()
   }
 
+  const handleActionClick = () => {
+    if (!action) return
+    if (pathname === '/agenda') {
+      window.dispatchEvent(new CustomEvent('topbar:novoAgendamento'))
+    } else {
+      router.push(action.href)
+    }
+  }
+
   return (
     <header className="bg-brand-50 border-b border-brand-100 px-6 h-16 flex items-center justify-between flex-shrink-0 gap-4">
       <h1 className="text-lg font-semibold text-brand-900">{title}</h1>
@@ -43,7 +52,7 @@ export function Topbar() {
       <div className="flex items-center gap-3">
         {action && (
           <button
-            onClick={() => router.push(action.href)}
+            onClick={handleActionClick}
             className="flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
           >
             <Plus className="w-4 h-4" />

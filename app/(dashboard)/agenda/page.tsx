@@ -233,6 +233,15 @@ export default function AgendaPage() {
     loadData()
   }, [])
 
+  useEffect(() => {
+    const handler = () => {
+      setSelectedAgendamento(null)
+      setIsModalOpen(true)
+    }
+    window.addEventListener('topbar:novoAgendamento', handler)
+    return () => window.removeEventListener('topbar:novoAgendamento', handler)
+  }, [])
+
   return (
     <div className="space-y-6">
       <section className="rounded-[2rem] bg-gradient-to-r from-brand-700 to-brand-900 text-white p-8 shadow-[0_30px_90px_-40px_rgba(17,24,39,0.65)]">
@@ -252,7 +261,7 @@ export default function AgendaPage() {
                 <select
                   value={filterClienteId}
                   onChange={e => setFilterClienteId(e.target.value)}
-                  className="px-3 py-2 border border-brand-300/30 rounded-xl text-sm bg-white/10 text-white placeholder-brand-200 focus:ring-2 focus:ring-white/50 focus:border-white/50"
+                  className="px-3 py-2 border border-brand-300/30 rounded-xl text-sm bg-white/10 text-white focus:ring-2 focus:ring-white/50 focus:border-white/50 [&>option]:text-gray-900 [&>option]:bg-white"
                 >
                   <option value="">Todos os clientes</option>
                   {clientes.map(cliente => (
@@ -264,7 +273,7 @@ export default function AgendaPage() {
                 <select
                   value={filterStatus}
                   onChange={e => setFilterStatus(e.target.value)}
-                  className="px-3 py-2 border border-brand-300/30 rounded-xl text-sm bg-white/10 text-white placeholder-brand-200 focus:ring-2 focus:ring-white/50 focus:border-white/50"
+                  className="px-3 py-2 border border-brand-300/30 rounded-xl text-sm bg-white/10 text-white focus:ring-2 focus:ring-white/50 focus:border-white/50 [&>option]:text-gray-900 [&>option]:bg-white"
                 >
                   <option value="">Todos os status</option>
                   <option value="agendado">Agendado</option>
@@ -379,54 +388,120 @@ export default function AgendaPage() {
               </div>
             </div>
 
-            {calendarView === 'week' ? (
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-7">
-                {weekDates.map(date => {
-                  const events = agendamentosFiltrados.filter(agendamento => {
-                    const eventDate = new Date(agendamento.data + 'T00:00:00')
-                    return isSameDay(eventDate, date)
-                  })
-                  return (
-                    <div key={date.toISOString()} className="rounded-2xl border border-gray-200 p-3 min-h-[320px] bg-gradient-to-br from-gray-50 to-white flex flex-col">
-                      <div className="mb-3 pb-2 border-b border-gray-200">
-                        <p className="text-xs uppercase tracking-wider font-bold text-brand-700">{date.toLocaleDateString('pt-BR', { weekday: 'short' })}</p>
-                        <p className="text-2xl font-bold text-gray-900 mt-1">{date.getDate()}</p>
-                        <span className="text-[10px] font-semibold uppercase text-gray-500">
-                          {date.toLocaleDateString('pt-BR', { month: 'short' })}
-                        </span>
-                      </div>
-                      {events.length === 0 ? (
-                        <div className="flex items-center justify-center flex-1">
-                          <p className="text-xs text-gray-400 text-center">Sem compromissos</p>
-                        </div>
-                      ) : (
-                        <div className="space-y-2 flex-1">
-                          {events.map(agendamento => {
-                            const config = statusConfig[agendamento.status as keyof typeof statusConfig]
-                            const clienteName = (agendamento as any).clientes?.nome || ''
-                            return (
-                              <div
-                                key={agendamento.id}
-                                className="rounded-xl border border-gray-200 bg-white p-2.5 cursor-pointer hover:border-brand-400 hover:shadow-md transition group"
-                              >
-                                <div className="flex items-start justify-between gap-2 mb-1.5">
-                                  <p className="text-sm font-bold text-gray-900 group-hover:text-brand-700">{formatarHorario(agendamento.horario)}</p>
-                                  <span className={`flex-shrink-0 rounded-full px-2 py-0.5 text-[9px] font-bold ${config.bg} ${config.text}`}>
-                                    {config.label}
-                                  </span>
-                                </div>
-                                <p className="text-xs font-semibold text-gray-800 truncate">{agendamento.nome_paciente}</p>
-                                {clienteName && <p className="text-xs text-gray-600 truncate">{clienteName}</p>}
-                              </div>
-                            )
-                          })}
-                        </div>
-                      )}
+            {calendarView === 'week' ? (() => {
+              const HOUR_START = 7
+              const HOUR_END = 21
+              const HOUR_HEIGHT = 64
+              const TIME_SLOTS = HOUR_END - HOUR_START
+              return (
+                <div className="overflow-x-auto rounded-2xl border border-gray-200">
+                  <div className="min-w-[640px]">
+                    {/* Day headers */}
+                    <div className="flex border-b-2 border-gray-200 bg-gray-50">
+                      <div className="w-14 flex-shrink-0 border-r border-gray-200" />
+                      {weekDates.map(date => {
+                        const isToday = isSameDay(date, new Date())
+                        return (
+                          <div key={date.toISOString()} className="flex-1 text-center py-2 px-1 border-l border-gray-200">
+                            <p className="text-[10px] uppercase tracking-wide font-bold text-brand-700">
+                              {date.toLocaleDateString('pt-BR', { weekday: 'short' })}
+                            </p>
+                            <div className={`inline-flex items-center justify-center w-7 h-7 rounded-full mt-1 text-sm font-bold ${
+                              isToday ? 'bg-brand-600 text-white' : 'text-gray-900'
+                            }`}>
+                              {date.getDate()}
+                            </div>
+                            <p className="text-[9px] text-gray-400 mt-0.5 uppercase">
+                              {date.toLocaleDateString('pt-BR', { month: 'short' })}
+                            </p>
+                          </div>
+                        )
+                      })}
                     </div>
-                  )
-                })}
-              </div>
-            ) : (
+
+                    {/* Scrollable time grid */}
+                    <div className="overflow-y-auto max-h-[520px]">
+                      <div className="flex" style={{ height: `${TIME_SLOTS * HOUR_HEIGHT}px` }}>
+                        {/* Time labels */}
+                        <div className="w-14 flex-shrink-0 relative border-r border-gray-200 bg-gray-50">
+                          {Array.from({ length: TIME_SLOTS }).map((_, i) => (
+                            <div
+                              key={i}
+                              className="absolute w-full flex items-start justify-end pr-2 pt-0.5"
+                              style={{ top: `${i * HOUR_HEIGHT}px`, height: `${HOUR_HEIGHT}px` }}
+                            >
+                              <span className="text-[10px] text-gray-400 font-medium">
+                                {String(HOUR_START + i).padStart(2, '0')}:00
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Day columns */}
+                        {weekDates.map(date => {
+                          const dayEvents = agendamentosFiltrados.filter(a => {
+                            const eventDate = new Date(a.data + 'T00:00:00')
+                            return isSameDay(eventDate, date)
+                          })
+                          const isToday = isSameDay(date, new Date())
+                          return (
+                            <div
+                              key={date.toISOString()}
+                              className={`flex-1 relative border-l border-gray-200 ${isToday ? 'bg-brand-50/30' : ''}`}
+                            >
+                              {/* Hour dividers */}
+                              {Array.from({ length: TIME_SLOTS }).map((_, i) => (
+                                <div
+                                  key={i}
+                                  className="absolute inset-x-0 border-t border-gray-100"
+                                  style={{ top: `${i * HOUR_HEIGHT}px` }}
+                                />
+                              ))}
+                              {/* Half-hour dividers */}
+                              {Array.from({ length: TIME_SLOTS }).map((_, i) => (
+                                <div
+                                  key={`h${i}`}
+                                  className="absolute inset-x-0 border-t border-gray-50"
+                                  style={{ top: `${i * HOUR_HEIGHT + HOUR_HEIGHT / 2}px` }}
+                                />
+                              ))}
+
+                              {/* Events */}
+                              {dayEvents.map(agendamento => {
+                                const [h, m] = agendamento.horario.split(':').map(Number)
+                                const topPx = (h - HOUR_START + m / 60) * HOUR_HEIGHT
+                                const duration = (agendamento as any).clientes?.duracao_atendimento || 30
+                                const heightPx = Math.max(34, (duration / 60) * HOUR_HEIGHT)
+                                const config = statusConfig[agendamento.status as keyof typeof statusConfig]
+                                const clienteName = (agendamento as any).clientes?.nome || ''
+                                return (
+                                  <div
+                                    key={agendamento.id}
+                                    className={`absolute left-1 right-1 rounded-lg border-l-[3px] border-brand-600 px-1.5 py-1 cursor-pointer hover:shadow-md hover:ring-1 hover:ring-brand-300 transition-shadow overflow-hidden ${config.bg}`}
+                                    style={{ top: `${topPx}px`, height: `${heightPx}px`, zIndex: 10 }}
+                                    onClick={() => handleEditAgendamento(agendamento)}
+                                  >
+                                    <p className="text-[10px] font-bold text-brand-800 leading-tight">
+                                      {formatarHorario(agendamento.horario)}
+                                    </p>
+                                    <p className="text-[11px] font-semibold text-gray-900 truncate leading-tight">
+                                      {agendamento.nome_paciente}
+                                    </p>
+                                    {clienteName && heightPx >= 52 && (
+                                      <p className="text-[9px] text-gray-600 truncate">{clienteName}</p>
+                                    )}
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )
+            })() : (
               <div className="grid grid-cols-7 gap-2">
                 {monthRows.map((week, rowIndex) => (
                   <div key={rowIndex} className="space-y-2">
