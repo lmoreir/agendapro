@@ -42,7 +42,7 @@ export default function AgendaPage() {
 
   const [filterClienteId, setFilterClienteId] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
-  const [calendarView, setCalendarView] = useState<'week' | 'month'>('month')
+  const [calendarView, setCalendarView] = useState<'week' | 'month' | 'day'>('month')
   const [currentDate, setCurrentDate] = useState(new Date())
 
   const supabase = createClient()
@@ -89,7 +89,9 @@ export default function AgendaPage() {
 
   const handlePrev = () => {
     const nextDate = new Date(currentDate)
-    if (calendarView === 'week') {
+    if (calendarView === 'day') {
+      nextDate.setDate(nextDate.getDate() - 1)
+    } else if (calendarView === 'week') {
       nextDate.setDate(nextDate.getDate() - 7)
     } else {
       nextDate.setMonth(nextDate.getMonth() - 1)
@@ -99,7 +101,9 @@ export default function AgendaPage() {
 
   const handleNext = () => {
     const nextDate = new Date(currentDate)
-    if (calendarView === 'week') {
+    if (calendarView === 'day') {
+      nextDate.setDate(nextDate.getDate() + 1)
+    } else if (calendarView === 'week') {
       nextDate.setDate(nextDate.getDate() + 7)
     } else {
       nextDate.setMonth(nextDate.getMonth() + 1)
@@ -107,7 +111,10 @@ export default function AgendaPage() {
     setCurrentDate(nextDate)
   }
 
-  const handleToday = () => setCurrentDate(new Date())
+  const handleToday = () => {
+    setCurrentDate(new Date())
+    setCalendarView('day')
+  }
 
   const loadData = async () => {
     setLoading(true)
@@ -346,7 +353,7 @@ export default function AgendaPage() {
         </div>
       </section>
 
-      <div className={`grid grid-cols-1 gap-6 ${notifOpen ? 'lg:grid-cols-[1fr_300px]' : ''}`}>
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6">
         <div className="space-y-6">
           <div className="bg-white rounded-3xl border border-gray-200 p-6 shadow-sm">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-4">
@@ -355,41 +362,28 @@ export default function AgendaPage() {
                 <p className="text-sm text-gray-500 mt-1">Visualize todos os agendamentos do período.</p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setCalendarView('week')}
-                  className={`px-3 py-2 rounded-2xl text-sm font-medium transition ${
-                    calendarView === 'week'
-                      ? 'bg-brand-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  Semana
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setCalendarView('month')}
-                  className={`px-3 py-2 rounded-2xl text-sm font-medium transition ${
-                    calendarView === 'month'
-                      ? 'bg-brand-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  Mês
-                </button>
-                <button
-                  type="button"
-                  onClick={handleToday}
-                  className="px-3 py-2 rounded-2xl text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200"
-                >
-                  Hoje
-                </button>
+                {(['day', 'week', 'month'] as const).map(view => (
+                  <button
+                    key={view}
+                    type="button"
+                    onClick={() => view === 'day' ? handleToday() : setCalendarView(view)}
+                    className={`px-3 py-2 rounded-2xl text-sm font-medium transition ${
+                      calendarView === view
+                        ? 'bg-brand-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {view === 'day' ? 'Hoje' : view === 'week' ? 'Semana' : 'Mês'}
+                  </button>
+                ))}
               </div>
             </div>
 
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-4">
-              <span className="text-sm font-semibold text-gray-900">
-                {calendarView === 'week'
+              <span className="text-sm font-semibold text-gray-900 capitalize">
+                {calendarView === 'day'
+                  ? currentDate.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+                  : calendarView === 'week'
                   ? `Semana de ${formatarData(weekDates[0].toISOString().split('T')[0])} a ${formatarData(weekDates[6].toISOString().split('T')[0])}`
                   : formatMonthLabel(currentDate)}
               </span>
@@ -411,7 +405,104 @@ export default function AgendaPage() {
               </div>
             </div>
 
-            {calendarView === 'week' ? (() => {
+            {calendarView === 'day' ? (() => {
+              const HOUR_START = 7
+              const HOUR_END = 21
+              const HOUR_HEIGHT = 64
+              const TIME_SLOTS = HOUR_END - HOUR_START
+              const todayEvents = agendamentosFiltrados.filter(a => {
+                const eventDate = new Date(a.data + 'T00:00:00')
+                return isSameDay(eventDate, currentDate)
+              })
+              return (
+                <div className="rounded-2xl border border-gray-200 overflow-hidden">
+                  {/* Cabeçalho do dia */}
+                  <div className={`flex items-center gap-3 px-4 py-3 border-b-2 border-gray-200 ${isSameDay(currentDate, new Date()) ? 'bg-brand-50' : 'bg-gray-50'}`}>
+                    <div className={`inline-flex items-center justify-center w-10 h-10 rounded-full text-xl font-bold flex-shrink-0 ${
+                      isSameDay(currentDate, new Date()) ? 'bg-brand-600 text-white' : 'bg-white border border-gray-200 text-gray-900'
+                    }`}>
+                      {currentDate.getDate()}
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-gray-900 capitalize">
+                        {currentDate.toLocaleDateString('pt-BR', { weekday: 'long', month: 'long', year: 'numeric' })}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {todayEvents.length === 0 ? 'Sem agendamentos' : `${todayEvents.length} agendamento${todayEvents.length !== 1 ? 's' : ''}`}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Grade temporal do dia */}
+                  <div className="overflow-y-auto max-h-[520px]">
+                    <div className="flex" style={{ height: `${TIME_SLOTS * HOUR_HEIGHT}px` }}>
+                      {/* Horas */}
+                      <div className="w-14 flex-shrink-0 relative border-r border-gray-200 bg-gray-50">
+                        {Array.from({ length: TIME_SLOTS }).map((_, i) => (
+                          <div
+                            key={i}
+                            className="absolute w-full flex items-start justify-end pr-2 pt-0.5"
+                            style={{ top: `${i * HOUR_HEIGHT}px`, height: `${HOUR_HEIGHT}px` }}
+                          >
+                            <span className="text-[10px] text-gray-400 font-medium">
+                              {String(HOUR_START + i).padStart(2, '0')}:00
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Coluna do dia */}
+                      <div className="flex-1 relative">
+                        {Array.from({ length: TIME_SLOTS }).map((_, i) => (
+                          <div key={i} className="absolute inset-x-0 border-t border-gray-100" style={{ top: `${i * HOUR_HEIGHT}px` }} />
+                        ))}
+                        {Array.from({ length: TIME_SLOTS }).map((_, i) => (
+                          <div key={`h${i}`} className="absolute inset-x-0 border-t border-gray-50" style={{ top: `${i * HOUR_HEIGHT + HOUR_HEIGHT / 2}px` }} />
+                        ))}
+                        {todayEvents.length === 0 && (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <p className="text-sm text-gray-400">Sem agendamentos para este dia</p>
+                          </div>
+                        )}
+                        {todayEvents.map(agendamento => {
+                          const [h, m] = agendamento.horario.split(':').map(Number)
+                          const topPx = (h - HOUR_START + m / 60) * HOUR_HEIGHT
+                          const duration = (agendamento as any).clientes?.duracao_atendimento || 30
+                          const heightPx = Math.max(42, (duration / 60) * HOUR_HEIGHT)
+                          const config = statusConfig[agendamento.status as keyof typeof statusConfig]
+                          const clienteName = (agendamento as any).clientes?.nome || ''
+                          return (
+                            <div
+                              key={agendamento.id}
+                              className={`absolute left-2 right-2 rounded-xl border-l-[4px] px-3 py-2 cursor-pointer hover:shadow-md transition-shadow overflow-hidden ${config.bg} ${config.border}`}
+                              style={{ top: `${topPx}px`, height: `${heightPx}px`, zIndex: 10 }}
+                              onClick={e => handleCardClick(agendamento, e)}
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="min-w-0">
+                                  <p className={`text-xs font-bold leading-tight ${config.text}`}>
+                                    {formatarHorario(agendamento.horario)}
+                                  </p>
+                                  <p className="text-sm font-semibold text-gray-900 truncate leading-tight mt-0.5">
+                                    {agendamento.nome_paciente}
+                                  </p>
+                                  {clienteName && heightPx >= 56 && (
+                                    <p className="text-xs text-gray-600 truncate">{clienteName}</p>
+                                  )}
+                                </div>
+                                <span className={`flex-shrink-0 text-[9px] font-bold px-2 py-0.5 rounded-full border ${config.bg} ${config.text} ${config.border}`}>
+                                  {config.label}
+                                </span>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )
+            })() : calendarView === 'week' ? (() => {
               const HOUR_START = 7
               const HOUR_END = 21
               const HOUR_HEIGHT = 64
@@ -587,24 +678,24 @@ export default function AgendaPage() {
           </div>
         </div>
 
-        {notifOpen && (
-          <aside>
-            <div className="bg-white rounded-3xl border border-gray-200 shadow-sm">
-              {/* Header colapsável */}
-              <div
-                className="flex items-center justify-between px-4 py-3 cursor-pointer select-none"
-                onClick={() => setNotifOpen(false)}
-              >
-                <div className="flex items-center gap-2">
-                  <h2 className="text-sm font-bold text-gray-900">Notificações</h2>
-                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-brand-100 text-brand-700 text-[11px] font-bold">
-                    {agendamentosFiltrados.length}
-                  </span>
-                </div>
-                <ChevronDown className="w-4 h-4 text-gray-400 rotate-180" />
+        <aside>
+          <div className="bg-white rounded-3xl border border-gray-200 shadow-sm">
+            {/* Header — clique para recolher/expandir */}
+            <div
+              className="flex items-center justify-between px-4 py-3 cursor-pointer select-none"
+              onClick={() => setNotifOpen(v => !v)}
+            >
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-bold text-gray-900">Notificações</h2>
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-brand-100 text-brand-700 text-[11px] font-bold">
+                  {agendamentosFiltrados.length}
+                </span>
               </div>
+              <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${notifOpen ? 'rotate-180' : ''}`} />
+            </div>
 
-              {/* Lista compacta */}
+            {/* Lista compacta (colapsável) */}
+            {notifOpen && (
               <div className="px-3 pb-3 space-y-1 max-h-[420px] overflow-y-auto">
                 {loading ? (
                   <div className="flex items-center justify-center py-6">
@@ -641,26 +732,9 @@ export default function AgendaPage() {
                   })
                 )}
               </div>
-            </div>
-          </aside>
-        )}
-
-        {!notifOpen && (
-          <aside className="hidden lg:block">
-            <button
-              onClick={() => setNotifOpen(true)}
-              className="w-full flex items-center justify-between gap-2 bg-white rounded-3xl border border-gray-200 shadow-sm px-4 py-3 hover:bg-gray-50 transition"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-bold text-gray-900">Notificações</span>
-                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-brand-100 text-brand-700 text-[11px] font-bold">
-                  {agendamentosFiltrados.length}
-                </span>
-              </div>
-              <ChevronDown className="w-4 h-4 text-gray-400" />
-            </button>
-          </aside>
-        )}
+            )}
+          </div>
+        </aside>
       </div>
 
       {/* Popover de status rápido */}
