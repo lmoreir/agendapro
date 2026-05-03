@@ -38,7 +38,14 @@ export default function LoginPage() {
         .eq('status', 'ativo')
         .single()
 
-      if (error || !data) {
+      if (error) {
+        console.error('Supabase error:', error)
+        setError(`Erro Supabase: ${error.message}`)
+        setLoading(false)
+        return
+      }
+
+      if (!data) {
         setError('Email ou senha incorretos')
         setLoading(false)
         return
