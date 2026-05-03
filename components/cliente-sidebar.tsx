@@ -13,8 +13,8 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { href: '/cliente/dashboard', label: 'Dashboard',    icon: LayoutDashboard },
-  { href: '/cliente/agenda',    label: 'Minha Agenda', icon: CalendarDays },
-  { href: '/cliente/relatorio', label: 'Relatório',    icon: BarChart3 },
+  { href: '/cliente/agenda',    label: 'Minha Agenda', icon: CalendarDays    },
+  { href: '/cliente/relatorio', label: 'Relatório',    icon: BarChart3       },
 ]
 
 export function ClienteSidebar() {
@@ -22,25 +22,25 @@ export function ClienteSidebar() {
   const { user, logout } = useAuth()
 
   return (
-    <aside className="w-60 min-h-screen bg-gray-900 flex flex-col">
-      <div className="px-6 py-5 border-b border-gray-700/60">
-        <span className="text-white text-xl font-bold tracking-tight">AgendaPro</span>
-        {user && (
-          <p className="text-gray-400 text-xs mt-2 truncate">{user.nome}</p>
-        )}
+    <aside className="w-60 min-h-screen bg-brand-900 text-brand-100 flex flex-col">
+      <div className="px-6 py-6 border-b border-brand-700/60">
+        <span className="text-white text-xl font-semibold tracking-tight">AgendaPro</span>
+        <p className="mt-2 text-xs text-brand-200/80">
+          {user?.nome ?? 'Portal do cliente'}
+        </p>
       </div>
 
-      <nav className="flex-1 px-3 py-4 space-y-0.5">
+      <nav className="flex-1 px-3 py-4 space-y-1">
         {navItems.map(({ href, label, icon: Icon }) => {
           const active = pathname === href || pathname.startsWith(href + '/')
           return (
             <Link
               key={href}
               href={href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium transition-colors ${
                 active
-                  ? 'bg-indigo-600 text-white'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                  ? 'bg-brand-600 text-white shadow-inner'
+                  : 'text-brand-100 hover:text-white hover:bg-brand-700/80'
               }`}
             >
               <Icon className="w-5 h-5 flex-shrink-0" />
@@ -50,18 +50,14 @@ export function ClienteSidebar() {
         })}
       </nav>
 
-      <div className="px-3 py-4 border-t border-gray-700/60">
+      <div className="px-3 py-4 border-t border-brand-700/60">
         <button
           onClick={logout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium text-brand-100 hover:text-white hover:bg-brand-700/80 transition-colors"
         >
           <LogOut className="w-5 h-5 flex-shrink-0" />
           Sair
         </button>
-      </div>
-
-      <div className="px-6 py-4 border-t border-gray-700/60">
-        <p className="text-gray-500 text-xs">AgendaPro v1.0</p>
       </div>
     </aside>
   )
