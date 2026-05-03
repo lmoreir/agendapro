@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { X, Loader2, AlertCircle } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { X, Loader2, AlertCircle, Clock } from 'lucide-react'
 import { Agendamento, Cliente } from '@/types'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/hooks/useToast'
@@ -9,12 +9,39 @@ import { validateFormularioAgendamento } from '@/lib/validations'
 
 const RAMOS_SAUDE = ['Médicos e Clínicas', 'Dentistas', 'Psicólogos']
 
+const DIAS_SEMANA_LABEL: Record<number, string> = {
+  0: 'Dom', 1: 'Seg', 2: 'Ter', 3: 'Qua', 4: 'Qui', 5: 'Sex', 6: 'Sáb',
+}
+
 interface AgendamentoModalProps {
   isOpen: boolean
   onClose: () => void
   onSuccess: () => void
   agendamento?: Agendamento | null
   clientes: Cliente[]
+}
+
+function generateTimeSlots(
+  horario_inicio: string,
+  horario_fim: string,
+  duracao: number,
+  intervalo: number,
+): string[] {
+  const [startH, startM] = horario_inicio.split(':').map(Number)
+  const [endH, endM] = horario_fim.split(':').map(Number)
+  const endMinutes = endH * 60 + endM
+
+  const slots: string[] = []
+  let cur = startH * 60 + startM
+
+  while (cur + duracao <= endMinutes) {
+    const h = Math.floor(cur / 60).toString().padStart(2, '0')
+    const m = (cur % 60).toString().padStart(2, '0')
+    slots.push(`${h}:${m}`)
+    cur += duracao + intervalo
+  }
+
+  return slots
 }
 
 export function AgendamentoModal({
@@ -26,6 +53,10 @@ export function AgendamentoModal({
 }: AgendamentoModalProps) {
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [availableSlots, setAvailableSlots] = useState<string[]>([])
+  const [loadingSlots, setLoadingSlots] = useState(false)
+  const [invalidDay, setInvalidDay] = useState(false)
+
   const [formData, setFormData] = useState({
     cliente_id: '',
     nome_paciente: '',
@@ -42,7 +73,6 @@ export function AgendamentoModal({
   const supabase = createClient()
   const { addToast } = useToast()
 
-  // Preencher form se for edição
   useEffect(() => {
     if (agendamento) {
       setFormData({
@@ -59,7 +89,7 @@ export function AgendamentoModal({
       })
     } else {
       setFormData({
-        cliente_id: '',
+        cliente_id: clientes.length === 1 ? clientes[0].id : '',
         nome_paciente: '',
         whatsapp_paciente: '',
         data: new Date().toISOString().split('T')[0],
@@ -71,22 +101,78 @@ export function AgendamentoModal({
         status: 'agendado',
       })
     }
+    setAvailableSlots([])
+    setInvalidDay(false)
   }, [agendamento, isOpen])
 
+  const clienteSelecionado = clientes.find(c => c.id === formData.cliente_id)
+  const isClienteSaude = clienteSelecionado
+    ? RAMOS_SAUDE.includes(clienteSelecionado.ramo)
+    : false
+
+  // Recalcula slots disponíveis quando cliente ou data mudam
+  const recomputeSlots = useCallback(async () => {
+    if (!clienteSelecionado || !formData.data) {
+      setAvailableSlots([])
+      setInvalidDay(false)
+      return
+    }
+
+    // Valida dia da semana
+    const date = new Date(formData.data + 'T00:00:00')
+    const dayOfWeek = date.getDay()
+    const isValid = clienteSelecionado.dias_atendimento.includes(dayOfWeek)
+    setInvalidDay(!isValid)
+
+    if (!isValid) {
+      setAvailableSlots([])
+      return
+    }
+
+    const allSlots = generateTimeSlots(
+      clienteSelecionado.horario_inicio,
+      clienteSelecionado.horario_fim,
+      clienteSelecionado.duracao_atendimento,
+      clienteSelecionado.intervalo_entre,
+    )
+
+    setLoadingSlots(true)
+    try {
+      let query = supabase
+        .from('agendamentos')
+        .select('horario')
+        .eq('cliente_id', clienteSelecionado.id)
+        .eq('data', formData.data)
+        .neq('status', 'cancelado')
+
+      // Ao editar, exclui o próprio agendamento para liberar o slot atual
+      if (agendamento?.id) {
+        query = query.neq('id', agendamento.id)
+      }
+
+      const { data: occupied } = await query
+      const occupiedTimes = (occupied || []).map((a: { horario: string }) =>
+        a.horario.slice(0, 5),
+      )
+
+      setAvailableSlots(allSlots.filter(slot => !occupiedTimes.includes(slot)))
+    } catch {
+      setAvailableSlots(allSlots)
+    } finally {
+      setLoadingSlots(false)
+    }
+  }, [clienteSelecionado, formData.data, agendamento?.id])
+
+  useEffect(() => {
+    recomputeSlots()
+  }, [recomputeSlots])
+
   const handleInputChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-    }))
+    setFormData(prev => ({ ...prev, [name]: value }))
   }
-
-  const clienteSelecionado = clientes.find(c => c.id === formData.cliente_id)
-  const isClienteSaude = clienteSelecionado ? RAMOS_SAUDE.includes(clienteSelecionado.ramo) : false
 
   const handleClienteChange = (clienteId: string) => {
     setFormData(prev => ({
@@ -94,7 +180,12 @@ export function AgendamentoModal({
       cliente_id: clienteId,
       tipo_pagamento: '',
       convenio_nome: '',
+      horario: '',
     }))
+  }
+
+  const handleDataChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({ ...prev, data: e.target.value, horario: '' }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -104,8 +195,12 @@ export function AgendamentoModal({
     const validation = validateFormularioAgendamento(formData)
     if (!validation.isValid) {
       setErrors(validation.errors)
-      const firstError = Object.values(validation.errors)[0]
-      addToast(firstError, 'error')
+      addToast(Object.values(validation.errors)[0], 'error')
+      return
+    }
+
+    if (invalidDay) {
+      addToast('Este dia não está disponível para o cliente selecionado', 'error')
       return
     }
 
@@ -113,7 +208,11 @@ export function AgendamentoModal({
       addToast('Informe se o atendimento é Convênio ou Particular', 'error')
       return
     }
-    if (isClienteSaude && formData.tipo_pagamento === 'convenio' && !formData.convenio_nome.trim()) {
+    if (
+      isClienteSaude &&
+      formData.tipo_pagamento === 'convenio' &&
+      !formData.convenio_nome.trim()
+    ) {
       addToast('Informe o nome do convênio', 'error')
       return
     }
@@ -132,7 +231,10 @@ export function AgendamentoModal({
       ...(isClienteSaude && formData.tipo_pagamento
         ? {
             tipo_pagamento: formData.tipo_pagamento,
-            convenio_nome: formData.tipo_pagamento === 'convenio' ? formData.convenio_nome : null,
+            convenio_nome:
+              formData.tipo_pagamento === 'convenio'
+                ? formData.convenio_nome
+                : null,
           }
         : { tipo_pagamento: null, convenio_nome: null }),
     }
@@ -143,19 +245,22 @@ export function AgendamentoModal({
           .from('agendamentos')
           .update(dataToSave)
           .eq('id', agendamento.id)
-
         if (error) throw error
       } else {
         const { error } = await supabase
           .from('agendamentos')
           .insert([dataToSave])
-
         if (error) throw error
       }
 
       onSuccess()
       onClose()
-      addToast(agendamento ? 'Agendamento atualizado com sucesso!' : 'Agendamento criado com sucesso!', 'success')
+      addToast(
+        agendamento
+          ? 'Agendamento atualizado com sucesso!'
+          : 'Agendamento criado com sucesso!',
+        'success',
+      )
     } catch (error) {
       console.error('Erro ao salvar agendamento:', error)
       addToast('Erro ao salvar agendamento', 'error')
@@ -166,6 +271,12 @@ export function AgendamentoModal({
 
   if (!isOpen) return null
 
+  const diasDisponiveis = clienteSelecionado?.dias_atendimento
+    .slice()
+    .sort((a, b) => a - b)
+    .map(d => DIAS_SEMANA_LABEL[d])
+    .join(', ')
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
@@ -174,17 +285,13 @@ export function AgendamentoModal({
           <h2 className="text-xl font-semibold text-gray-900">
             {agendamento ? 'Editar Agendamento' : 'Novo Agendamento'}
           </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
-          >
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
             <X className="w-6 h-6" />
           </button>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} noValidate className="p-6 space-y-6">
-          {/* Row 1: Cliente e Tipo */}
+          {/* Cliente e Tipo */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -193,7 +300,7 @@ export function AgendamentoModal({
               <select
                 name="cliente_id"
                 value={formData.cliente_id}
-                onChange={(e) => handleClienteChange(e.target.value)}
+                onChange={e => handleClienteChange(e.target.value)}
                 required
                 className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                   errors.cliente_id ? 'border-red-300 bg-red-50' : 'border-gray-300'
@@ -210,6 +317,16 @@ export function AgendamentoModal({
                 <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
                   <AlertCircle className="w-4 h-4" />
                   {errors.cliente_id}
+                </p>
+              )}
+              {/* Exibe dias disponíveis do cliente */}
+              {clienteSelecionado && diasDisponiveis && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Atende: <span className="font-medium">{diasDisponiveis}</span>
+                  {' · '}
+                  {clienteSelecionado.horario_inicio.slice(0, 5)}–{clienteSelecionado.horario_fim.slice(0, 5)}
+                  {' · '}
+                  {clienteSelecionado.duracao_atendimento}min
                 </p>
               )}
             </div>
@@ -237,7 +354,7 @@ export function AgendamentoModal({
             </div>
           </div>
 
-          {/* Row 2: Paciente */}
+          {/* Nome do Paciente */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Nome do Paciente *
@@ -261,7 +378,7 @@ export function AgendamentoModal({
             )}
           </div>
 
-          {/* Row 3: WhatsApp Paciente */}
+          {/* WhatsApp */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               WhatsApp do Paciente *
@@ -285,7 +402,7 @@ export function AgendamentoModal({
             )}
           </div>
 
-          {/* Convênio / Particular — apenas para Médicos, Dentistas e Psicólogos */}
+          {/* Convênio / Particular */}
           {isClienteSaude && (
             <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-4 space-y-3">
               <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide">
@@ -294,7 +411,7 @@ export function AgendamentoModal({
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Tipo de Atendimento *
+                    Tipo de Pagamento *
                   </label>
                   <select
                     name="tipo_pagamento"
@@ -326,8 +443,9 @@ export function AgendamentoModal({
             </div>
           )}
 
-          {/* Row 4: Data e Horário */}
+          {/* Data e Horário */}
           <div className="grid grid-cols-3 gap-4">
+            {/* Data */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Data *
@@ -336,10 +454,10 @@ export function AgendamentoModal({
                 type="date"
                 name="data"
                 value={formData.data}
-                onChange={handleInputChange}
+                onChange={handleDataChange}
                 required
                 className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  errors.data ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                  errors.data || invalidDay ? 'border-red-300 bg-red-50' : 'border-gray-300'
                 }`}
               />
               {errors.data && (
@@ -348,28 +466,68 @@ export function AgendamentoModal({
                   {errors.data}
                 </p>
               )}
+              {invalidDay && !errors.data && (
+                <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4" />
+                  Dia sem atendimento. Dias válidos: {diasDisponiveis}
+                </p>
+              )}
             </div>
+
+            {/* Horário — select com slots calculados */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Horário *
               </label>
-              <input
-                type="time"
-                name="horario"
-                value={formData.horario}
-                onChange={handleInputChange}
-                required
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  errors.horario ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                }`}
-              />
+              {loadingSlots ? (
+                <div className="w-full px-4 py-2 border border-gray-300 rounded-lg flex items-center gap-2 text-gray-500 text-sm">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Carregando...
+                </div>
+              ) : (
+                <select
+                  name="horario"
+                  value={formData.horario}
+                  onChange={handleInputChange}
+                  required
+                  disabled={!formData.cliente_id || !formData.data || invalidDay}
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400 ${
+                    errors.horario ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                  }`}
+                >
+                  <option value="">
+                    {!formData.cliente_id
+                      ? 'Selecione o cliente'
+                      : !formData.data
+                        ? 'Selecione a data'
+                        : invalidDay
+                          ? 'Dia indisponível'
+                          : availableSlots.length === 0
+                            ? 'Sem horários livres'
+                            : 'Selecione o horário'}
+                  </option>
+                  {availableSlots.map(slot => (
+                    <option key={slot} value={slot}>
+                      {slot}
+                    </option>
+                  ))}
+                </select>
+              )}
               {errors.horario && (
                 <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
                   <AlertCircle className="w-4 h-4" />
                   {errors.horario}
                 </p>
               )}
+              {!loadingSlots && formData.cliente_id && formData.data && !invalidDay && availableSlots.length === 0 && (
+                <p className="text-amber-600 text-xs mt-1 flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  Todos os horários estão ocupados neste dia.
+                </p>
+              )}
             </div>
+
+            {/* Status */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Status
@@ -388,7 +546,7 @@ export function AgendamentoModal({
             </div>
           </div>
 
-          {/* Row 5: Observação */}
+          {/* Observação */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Observações
