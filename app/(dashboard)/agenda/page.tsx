@@ -353,7 +353,7 @@ export default function AgendaPage() {
         </div>
       </section>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_200px] gap-6">
         <div className="space-y-6">
           <div className="bg-white rounded-3xl border border-gray-200 p-6 shadow-sm">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-4">
@@ -679,53 +679,45 @@ export default function AgendaPage() {
         </div>
 
         <aside>
-          <div className="bg-white rounded-3xl border border-gray-200 shadow-sm">
-            {/* Header — clique para recolher/expandir */}
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm">
+            {/* Header */}
             <div
-              className="flex items-center justify-between px-4 py-3 cursor-pointer select-none"
+              className="flex items-center justify-between px-3 py-2 cursor-pointer select-none border-b border-gray-100"
               onClick={() => setNotifOpen(v => !v)}
             >
-              <div className="flex items-center gap-2">
-                <h2 className="text-sm font-bold text-gray-900">Notificações</h2>
-                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-brand-100 text-brand-700 text-[11px] font-bold">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-bold text-gray-700">Avisos</span>
+                <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-brand-100 text-brand-700 text-[10px] font-bold">
                   {agendamentosFiltrados.length}
                 </span>
               </div>
-              <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${notifOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${notifOpen ? 'rotate-180' : ''}`} />
             </div>
 
-            {/* Lista compacta (colapsável) */}
             {notifOpen && (
-              <div className="px-3 pb-3 space-y-1 max-h-[420px] overflow-y-auto">
+              <div className="p-1.5 space-y-0.5 max-h-[480px] overflow-y-auto">
                 {loading ? (
-                  <div className="flex items-center justify-center py-6">
-                    <Loader2 className="w-4 h-4 animate-spin text-brand-700" />
+                  <div className="flex justify-center py-4">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-700" />
                   </div>
                 ) : agendamentosFiltrados.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-6 text-center">
-                    <AlertCircle className="w-6 h-6 text-gray-300 mb-1" />
-                    <p className="text-xs text-gray-500">Nenhum agendamento</p>
-                  </div>
+                  <p className="text-[10px] text-gray-400 text-center py-4">Sem agendamentos</p>
                 ) : (
-                  agendamentosFiltrados.slice(0, 30).map(agendamento => {
+                  agendamentosFiltrados.slice(0, 40).map(agendamento => {
                     const config = statusConfig[agendamento.status as keyof typeof statusConfig]
-                    const clienteName = (agendamento as any).clientes?.nome || 'Cliente'
                     return (
                       <div
                         key={agendamento.id}
-                        className={`flex items-center gap-2 px-2 py-1.5 rounded-xl border-l-[3px] ${config.bg} ${config.border} hover:brightness-95 transition cursor-pointer`}
+                        className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border-l-2 ${config.bg} ${config.border} hover:brightness-95 transition cursor-pointer`}
                         onClick={e => handleCardClick(agendamento, e)}
                       >
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-1">
-                            <p className={`text-xs font-semibold truncate ${config.text}`}>
-                              {agendamento.nome_paciente}
-                            </p>
-                            <span className="text-[9px] text-gray-500 whitespace-nowrap flex-shrink-0">
-                              {formatarDataCurta(agendamento.data)} {formatarHorario(agendamento.horario)}
-                            </span>
-                          </div>
-                          <p className="text-[10px] text-gray-500 truncate">{clienteName}</p>
+                          <p className={`text-[11px] font-semibold truncate leading-tight ${config.text}`}>
+                            {agendamento.nome_paciente}
+                          </p>
+                          <p className="text-[9px] text-gray-400 leading-tight">
+                            {formatarDataCurta(agendamento.data)} · {formatarHorario(agendamento.horario)}
+                          </p>
                         </div>
                       </div>
                     )
