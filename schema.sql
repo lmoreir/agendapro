@@ -75,10 +75,9 @@ create table if not exists public.especialistas (
 alter table public.agendamentos add column if not exists especialista_id uuid references public.especialistas(id) on delete set null;
 
 alter table public.especialistas enable row level security;
-create policy "Autenticados podem ler especialistas"   on public.especialistas for select using (auth.role() = 'authenticated');
-create policy "Autenticados podem inserir especialistas" on public.especialistas for insert with check (auth.role() = 'authenticated');
-create policy "Autenticados podem atualizar especialistas" on public.especialistas for update using (auth.role() = 'authenticated');
-create policy "Autenticados podem deletar especialistas" on public.especialistas for delete using (auth.role() = 'authenticated');
+create policy "Especialistas acessivel via anon"
+  on public.especialistas for all
+  using (true) with check (true);
 
 -- Migração para bases existentes (execute no Supabase SQL Editor):
 -- alter table public.agendamentos add column if not exists especialista_id uuid references public.especialistas(id) on delete set null;

@@ -52,13 +52,21 @@ export function EspecialistasModal({ isOpen, onClose, cliente }: Props) {
 
   const load = async () => {
     setLoading(true)
-    const { data } = await supabase
-      .from('especialistas')
-      .select('*')
-      .eq('cliente_id', cliente.id)
-      .order('nome')
-    setEspecialistas(data || [])
-    setLoading(false)
+    try {
+      const { data, error } = await supabase
+        .from('especialistas')
+        .select('*')
+        .eq('cliente_id', cliente.id)
+        .order('nome')
+      if (error) throw error
+      setEspecialistas(data || [])
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err)
+      addToast(`Erro ao carregar especialistas: ${msg}`, 'error')
+      console.error('Especialistas load error:', err)
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => {
@@ -156,8 +164,10 @@ export function EspecialistasModal({ isOpen, onClose, cliente }: Props) {
 
       await load()
       setMode('list')
-    } catch {
-      addToast('Erro ao salvar especialista', 'error')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err)
+      addToast(`Erro ao salvar: ${msg}`, 'error')
+      console.error('Especialistas save error:', err)
     } finally {
       setSaving(false)
     }
@@ -171,8 +181,9 @@ export function EspecialistasModal({ isOpen, onClose, cliente }: Props) {
       if (error) throw error
       setEspecialistas(prev => prev.filter(e => e.id !== id))
       addToast('Especialista removido!', 'success')
-    } catch {
-      addToast('Erro ao deletar especialista', 'error')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err)
+      addToast(`Erro ao deletar: ${msg}`, 'error')
     } finally {
       setDeleting(null)
     }
