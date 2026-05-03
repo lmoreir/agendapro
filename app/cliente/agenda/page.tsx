@@ -1,11 +1,12 @@
 ﻿'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight, Loader2, AlertCircle, Calendar, Clock, User, Phone } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Loader2, AlertCircle, Plus } from 'lucide-react'
 import { Agendamento, Cliente } from '@/types'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/hooks/useToast'
+import { AgendamentoModal } from '@/components/agendamento-modal'
 
 const statusConfig = {
   agendado: { label: 'Agendado', bg: 'bg-blue-100', text: 'text-blue-800' },
@@ -21,6 +22,7 @@ export default function ClienteAgendaPage() {
   const [loading, setLoading] = useState(true)
   const [calendarView, setCalendarView] = useState<'week' | 'month'>('week')
   const [currentDate, setCurrentDate] = useState(new Date())
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   const supabase = createClient()
   const { addToast } = useToast()
@@ -179,7 +181,17 @@ export default function ClienteAgendaPage() {
                 Acompanhe seus agendamentos futuros, visualize o próximo compromisso e mantenha sua equipe alinhada.
               </p>
             </div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="flex flex-col gap-3 items-start sm:items-end">
+              {cliente?.pode_agendar && (
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="flex items-center gap-2 bg-white text-brand-700 hover:bg-brand-50 font-semibold px-5 py-2.5 rounded-2xl transition text-sm shadow-sm"
+                >
+                  <Plus className="w-4 h-4" />
+                  Novo Agendamento
+                </button>
+              )}
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <div className="rounded-3xl bg-white/10 border border-white/15 p-5">
                 <p className="text-xs uppercase tracking-[0.25em] text-brand-100/80">Próximo</p>
                 <p className="mt-3 text-2xl font-semibold">
@@ -196,6 +208,7 @@ export default function ClienteAgendaPage() {
                 <p className="text-xs uppercase tracking-[0.25em] text-brand-100/80">Visão</p>
                 <p className="mt-3 text-2xl font-semibold">{calendarView === 'week' ? 'Semanal' : 'Mensal'}</p>
               </div>
+            </div>
             </div>
           </div>
         </section>
@@ -399,12 +412,40 @@ export default function ClienteAgendaPage() {
         </aside>
       </div>
 
-      {agendamentos.length === 0 && (
+      {agendamentos.length === 0 && !loading && (
         <div className="bg-white rounded-3xl border border-gray-200 p-12 text-center shadow-sm">
           <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Nenhum agendamento futuro</h3>
-          <p className="text-gray-600">Você não possui agendamentos futuros no momento.</p>
+          <p className="text-gray-600 mb-6">Você não possui agendamentos futuros no momento.</p>
+          {cliente?.pode_agendar && (
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="inline-flex items-center gap-2 bg-brand-600 text-white px-4 py-2 rounded-lg hover:bg-brand-700 transition font-medium"
+            >
+              <Plus className="w-4 h-4" />
+              Criar Agendamento
+            </button>
+          )}
         </div>
+      )}
+
+      {cliente && (
+        <AgendamentoModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSuccess={async () => {
+            setIsModalOpen(false)
+            const { data } = await supabase
+              .from('agendamentos')
+              .select('*')
+              .eq('cliente_id', user?.cliente_id)
+              .gte('data', new Date().toISOString().split('T')[0])
+              .order('data', { ascending: true })
+              .order('horario', { ascending: true })
+            if (data) setAgendamentos(data)
+          }}
+          clientes={[cliente]}
+        />
       )}
     </div>
   )

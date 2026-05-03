@@ -12,6 +12,7 @@ export interface Cliente {
   observacoes?: string
   sigla: string
   status: 'ativo' | 'inativo'
+  pode_agendar: boolean
   created_at: string
 }
 

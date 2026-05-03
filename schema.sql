@@ -22,8 +22,12 @@ create table if not exists public.clientes (
   observacoes          text,
   sigla                text not null,
   status               text not null default 'ativo' check (status in ('ativo', 'inativo')),
+  pode_agendar         boolean not null default false,
   created_at           timestamptz not null default now()
 );
+
+-- Migração para bases existentes (execute no Supabase SQL Editor):
+-- alter table public.clientes add column if not exists pode_agendar boolean not null default false;
 
 comment on column public.clientes.dias_atendimento is
   '0=Dom, 1=Seg, 2=Ter, 3=Qua, 4=Qui, 5=Sex, 6=Sab';

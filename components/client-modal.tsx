@@ -50,6 +50,7 @@ export function ClientModal({ isOpen, onClose, onSuccess, cliente }: ClientModal
     observacoes: '',
     sigla: '',
     status: 'ativo' as const,
+    pode_agendar: false,
   })
 
   const supabase = createClient()
@@ -84,6 +85,7 @@ export function ClientModal({ isOpen, onClose, onSuccess, cliente }: ClientModal
         observacoes: cliente.observacoes || '',
         sigla: cliente.sigla,
         status: cliente.status,
+        pode_agendar: cliente.pode_agendar ?? false,
       })
     } else if (isOpen && !cliente) {
       setRamoCategoria('')
@@ -100,6 +102,7 @@ export function ClientModal({ isOpen, onClose, onSuccess, cliente }: ClientModal
         observacoes: '',
         sigla: '',
         status: 'ativo',
+        pode_agendar: false,
       })
     }
   }, [cliente, isOpen])
@@ -175,6 +178,7 @@ export function ClientModal({ isOpen, onClose, onSuccess, cliente }: ClientModal
         observacoes: '',
         sigla: '',
         status: 'ativo',
+        pode_agendar: false,
       })
 
       onSuccess()
@@ -475,6 +479,26 @@ export function ClientModal({ isOpen, onClose, onSuccess, cliente }: ClientModal
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
+          </div>
+
+          {/* Permissão de agendamento */}
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <div className="relative flex-shrink-0 mt-0.5">
+                <input
+                  type="checkbox"
+                  checked={formData.pode_agendar}
+                  onChange={e => setFormData(prev => ({ ...prev, pode_agendar: e.target.checked }))}
+                  className="sr-only peer"
+                />
+                <div className="w-10 h-6 bg-gray-300 rounded-full peer-checked:bg-brand-600 transition-colors" />
+                <div className="absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-900">Permitir que o cliente crie agendamentos</p>
+                <p className="text-xs text-gray-500 mt-0.5">Quando ativado, o cliente poderá criar novos agendamentos pelo seu painel.</p>
+              </div>
+            </label>
           </div>
 
           {/* Row 7: Observações */}
