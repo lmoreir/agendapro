@@ -1,11 +1,12 @@
 ﻿'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { Plus, Loader2, Trash2, Edit2, AlertCircle, Download, KeyRound } from 'lucide-react'
+import { Plus, Loader2, Trash2, Edit2, AlertCircle, Download, KeyRound, Users } from 'lucide-react'
 import { Cliente } from '@/types'
 import { createClient } from '@/lib/supabase/client'
 import { ClientModal } from '@/components/client-modal'
 import { ClienteAcessoModal } from '@/components/cliente-acesso-modal'
+import { EspecialistasModal } from '@/components/especialistas-modal'
 import { exportToCSV } from '@/lib/export'
 import { useToast } from '@/hooks/useToast'
 
@@ -26,6 +27,7 @@ export default function ClientesPage() {
   const [selectedCliente, setSelectedCliente] = useState<Cliente | null>(null)
   const [deleting, setDeleting] = useState<string | null>(null)
   const [acessoCliente, setAcessoCliente] = useState<Cliente | null>(null)
+  const [especialistasCliente, setEspecialistasCliente] = useState<Cliente | null>(null)
 
   const supabase = createClient()
   const { addToast } = useToast()
@@ -265,33 +267,46 @@ export default function ClientesPage() {
                 )}
               </div>
 
-              <div className="px-6 py-4 border-t border-gray-100 flex gap-2">
-                <button
-                  onClick={() => handleEditClient(cliente)}
-                  className="flex-1 inline-flex items-center justify-center gap-2 rounded-3xl border border-brand-100 px-3 py-2 text-brand-700 hover:bg-brand-50 transition font-medium"
-                >
-                  <Edit2 className="w-4 h-4" />
-                  Editar
-                </button>
-                <button
-                  onClick={() => setAcessoCliente(cliente)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-brand-700 border border-brand-200 bg-brand-50 rounded-lg hover:bg-brand-100 transition"
-                >
-                  <KeyRound className="w-3.5 h-3.5" />
-                  Acesso
-                </button>
-                <button
-                  onClick={() => handleDeleteClient(cliente.id)}
-                  disabled={deleting === cliente.id}
-                  className="flex-1 inline-flex items-center justify-center gap-2 rounded-3xl border border-red-200 px-3 py-2 text-red-600 hover:bg-red-50 transition font-medium disabled:opacity-50"
-                >
-                  {deleting === cliente.id ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Trash2 className="w-4 h-4" />
-                  )}
-                  Deletar
-                </button>
+              <div className="px-6 py-4 border-t border-gray-100 space-y-2">
+                {/* Linha 1: Editar + Deletar */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleEditClient(cliente)}
+                    className="flex-1 inline-flex items-center justify-center gap-2 rounded-2xl border border-brand-100 px-3 py-2 text-brand-700 hover:bg-brand-50 transition font-medium text-sm"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                    Editar
+                  </button>
+                  <button
+                    onClick={() => handleDeleteClient(cliente.id)}
+                    disabled={deleting === cliente.id}
+                    className="flex-1 inline-flex items-center justify-center gap-2 rounded-2xl border border-red-200 px-3 py-2 text-red-600 hover:bg-red-50 transition font-medium text-sm disabled:opacity-50"
+                  >
+                    {deleting === cliente.id ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-4 h-4" />
+                    )}
+                    Deletar
+                  </button>
+                </div>
+                {/* Linha 2: Especialistas + Acesso */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setEspecialistasCliente(cliente)}
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-2xl border border-gray-200 px-3 py-1.5 text-gray-600 hover:bg-gray-50 transition text-xs font-medium"
+                  >
+                    <Users className="w-3.5 h-3.5" />
+                    Especialistas
+                  </button>
+                  <button
+                    onClick={() => setAcessoCliente(cliente)}
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-2xl border border-brand-200 bg-brand-50 px-3 py-1.5 text-brand-700 hover:bg-brand-100 transition text-xs font-medium"
+                  >
+                    <KeyRound className="w-3.5 h-3.5" />
+                    Acesso
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -311,6 +326,14 @@ export default function ClientesPage() {
           onClose={() => setAcessoCliente(null)}
           onSuccess={() => setAcessoCliente(null)}
           cliente={acessoCliente}
+        />
+      )}
+
+      {especialistasCliente && (
+        <EspecialistasModal
+          isOpen={!!especialistasCliente}
+          onClose={() => setEspecialistasCliente(null)}
+          cliente={especialistasCliente}
         />
       )}
     </div>

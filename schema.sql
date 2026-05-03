@@ -56,6 +56,34 @@ create table if not exists public.agendamentos (
 -- alter table public.agendamentos add column if not exists convenio_nome text;
 
 -- =====================================================
+-- Tabela: especialistas
+-- =====================================================
+create table if not exists public.especialistas (
+  id                   uuid primary key default gen_random_uuid(),
+  cliente_id           uuid not null references public.clientes(id) on delete cascade,
+  nome                 text not null,
+  especialidade        text,
+  dias_atendimento     int[] not null default '{}',
+  horario_inicio       time not null,
+  horario_fim          time not null,
+  duracao_atendimento  int not null default 30,
+  intervalo_entre      int not null default 0,
+  status               text not null default 'ativo' check (status in ('ativo', 'inativo')),
+  created_at           timestamptz not null default now()
+);
+
+alter table public.agendamentos add column if not exists especialista_id uuid references public.especialistas(id) on delete set null;
+
+alter table public.especialistas enable row level security;
+create policy "Autenticados podem ler especialistas"   on public.especialistas for select using (auth.role() = 'authenticated');
+create policy "Autenticados podem inserir especialistas" on public.especialistas for insert with check (auth.role() = 'authenticated');
+create policy "Autenticados podem atualizar especialistas" on public.especialistas for update using (auth.role() = 'authenticated');
+create policy "Autenticados podem deletar especialistas" on public.especialistas for delete using (auth.role() = 'authenticated');
+
+-- Migração para bases existentes (execute no Supabase SQL Editor):
+-- alter table public.agendamentos add column if not exists especialista_id uuid references public.especialistas(id) on delete set null;
+
+-- =====================================================
 -- Índices
 -- =====================================================
 create index if not exists idx_agendamentos_cliente_id on public.agendamentos(cliente_id);
