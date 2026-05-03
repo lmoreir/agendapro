@@ -39,11 +39,17 @@ create table if not exists public.agendamentos (
   data              date not null,
   horario           time not null,
   tipo_atendimento  text not null,
+  tipo_pagamento    text check (tipo_pagamento in ('convenio', 'particular')),
+  convenio_nome     text,
   observacao        text,
   status            text not null default 'agendado'
                       check (status in ('agendado', 'confirmado', 'cancelado', 'realizado')),
   created_at        timestamptz not null default now()
 );
+
+-- Migração para bases existentes (execute no Supabase SQL Editor):
+-- alter table public.agendamentos add column if not exists tipo_pagamento text check (tipo_pagamento in ('convenio', 'particular'));
+-- alter table public.agendamentos add column if not exists convenio_nome text;
 
 -- =====================================================
 -- Índices

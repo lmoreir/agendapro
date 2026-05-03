@@ -23,6 +23,8 @@ export interface Agendamento {
   data: string
   horario: string
   tipo_atendimento: string
+  tipo_pagamento?: 'convenio' | 'particular'
+  convenio_nome?: string
   observacao?: string
   status: 'agendado' | 'confirmado' | 'cancelado' | 'realizado'
   created_at: string

@@ -7,6 +7,8 @@ import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/hooks/useToast'
 import { validateFormularioAgendamento } from '@/lib/validations'
 
+const RAMOS_SAUDE = ['Médicos e Clínicas', 'Dentistas', 'Psicólogos']
+
 interface AgendamentoModalProps {
   isOpen: boolean
   onClose: () => void
@@ -31,6 +33,8 @@ export function AgendamentoModal({
     data: '',
     horario: '',
     tipo_atendimento: '',
+    tipo_pagamento: '' as '' | 'convenio' | 'particular',
+    convenio_nome: '',
     observacao: '',
     status: 'agendado' as const,
   })
@@ -48,11 +52,12 @@ export function AgendamentoModal({
         data: agendamento.data,
         horario: agendamento.horario,
         tipo_atendimento: agendamento.tipo_atendimento,
+        tipo_pagamento: agendamento.tipo_pagamento || '',
+        convenio_nome: agendamento.convenio_nome || '',
         observacao: agendamento.observacao || '',
         status: agendamento.status,
       })
     } else {
-      // Limpar form para novo
       setFormData({
         cliente_id: '',
         nome_paciente: '',
@@ -60,6 +65,8 @@ export function AgendamentoModal({
         data: new Date().toISOString().split('T')[0],
         horario: '',
         tipo_atendimento: '',
+        tipo_pagamento: '',
+        convenio_nome: '',
         observacao: '',
         status: 'agendado',
       })
@@ -78,12 +85,15 @@ export function AgendamentoModal({
     }))
   }
 
+  const clienteSelecionado = clientes.find(c => c.id === formData.cliente_id)
+  const isClienteSaude = clienteSelecionado ? RAMOS_SAUDE.includes(clienteSelecionado.ramo) : false
+
   const handleClienteChange = (clienteId: string) => {
-    const cliente = clientes.find(c => c.id === clienteId)
     setFormData(prev => ({
       ...prev,
       cliente_id: clienteId,
-      // Não preenchemos automaticamente, mas poderia
+      tipo_pagamento: '',
+      convenio_nome: '',
     }))
   }
 
@@ -91,7 +101,6 @@ export function AgendamentoModal({
     e.preventDefault()
     setErrors({})
 
-    // Validar formulário
     const validation = validateFormularioAgendamento(formData)
     if (!validation.isValid) {
       setErrors(validation.errors)
@@ -100,22 +109,46 @@ export function AgendamentoModal({
       return
     }
 
+    if (isClienteSaude && !formData.tipo_pagamento) {
+      addToast('Informe se o atendimento é Convênio ou Particular', 'error')
+      return
+    }
+    if (isClienteSaude && formData.tipo_pagamento === 'convenio' && !formData.convenio_nome.trim()) {
+      addToast('Informe o nome do convênio', 'error')
+      return
+    }
+
     setLoading(true)
+
+    const dataToSave = {
+      cliente_id: formData.cliente_id,
+      nome_paciente: formData.nome_paciente,
+      whatsapp_paciente: formData.whatsapp_paciente,
+      data: formData.data,
+      horario: formData.horario,
+      tipo_atendimento: formData.tipo_atendimento,
+      observacao: formData.observacao,
+      status: formData.status,
+      ...(isClienteSaude && formData.tipo_pagamento
+        ? {
+            tipo_pagamento: formData.tipo_pagamento,
+            convenio_nome: formData.tipo_pagamento === 'convenio' ? formData.convenio_nome : null,
+          }
+        : { tipo_pagamento: null, convenio_nome: null }),
+    }
 
     try {
       if (agendamento) {
-        // Atualizar
         const { error } = await supabase
           .from('agendamentos')
-          .update(formData)
+          .update(dataToSave)
           .eq('id', agendamento.id)
 
         if (error) throw error
       } else {
-        // Inserir
         const { error } = await supabase
           .from('agendamentos')
-          .insert([formData])
+          .insert([dataToSave])
 
         if (error) throw error
       }
@@ -251,6 +284,47 @@ export function AgendamentoModal({
               </p>
             )}
           </div>
+
+          {/* Convênio / Particular — apenas para Médicos, Dentistas e Psicólogos */}
+          {isClienteSaude && (
+            <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-4 space-y-3">
+              <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide">
+                Informações de Pagamento
+              </p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Tipo de Atendimento *
+                  </label>
+                  <select
+                    name="tipo_pagamento"
+                    value={formData.tipo_pagamento}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                  >
+                    <option value="">Selecione</option>
+                    <option value="particular">Particular</option>
+                    <option value="convenio">Convênio</option>
+                  </select>
+                </div>
+                {formData.tipo_pagamento === 'convenio' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Nome do Convênio *
+                    </label>
+                    <input
+                      type="text"
+                      name="convenio_nome"
+                      value={formData.convenio_nome}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Ex: Unimed, Bradesco Saúde"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Row 4: Data e Horário */}
           <div className="grid grid-cols-3 gap-4">

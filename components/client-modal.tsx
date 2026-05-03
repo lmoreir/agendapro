@@ -7,6 +7,15 @@ import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/hooks/useToast'
 import { validateFormularioCliente } from '@/lib/validations'
 
+const RAMOS_FIXOS = [
+  'Médicos e Clínicas',
+  'Dentistas',
+  'Psicólogos',
+  'Esteticistas e Salões',
+  'Fotógrafos',
+]
+const RAMOS_OPTIONS = [...RAMOS_FIXOS, 'Outros prestadores de serviços']
+
 const DIAS_SEMANA = [
   { label: 'Seg', value: 1 },
   { label: 'Ter', value: 2 },
@@ -27,6 +36,7 @@ interface ClientModalProps {
 export function ClientModal({ isOpen, onClose, onSuccess, cliente }: ClientModalProps) {
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [ramoCategoria, setRamoCategoria] = useState('')
   const [formData, setFormData] = useState({
     nome: '',
     ramo: '',
@@ -45,9 +55,22 @@ export function ClientModal({ isOpen, onClose, onSuccess, cliente }: ClientModal
   const supabase = createClient()
   const { addToast } = useToast()
 
+  const handleRamoCategoriaChange = (value: string) => {
+    setRamoCategoria(value)
+    if (value !== 'Outros prestadores de serviços') {
+      setFormData(prev => ({ ...prev, ramo: value }))
+    } else {
+      setFormData(prev => ({ ...prev, ramo: '' }))
+    }
+  }
+
   // Preencher form se for edição
   useEffect(() => {
     if (cliente && isOpen) {
+      const categoria = RAMOS_FIXOS.includes(cliente.ramo)
+        ? cliente.ramo
+        : 'Outros prestadores de serviços'
+      setRamoCategoria(categoria)
       setFormData({
         nome: cliente.nome,
         ramo: cliente.ramo,
@@ -63,7 +86,7 @@ export function ClientModal({ isOpen, onClose, onSuccess, cliente }: ClientModal
         status: cliente.status,
       })
     } else if (isOpen && !cliente) {
-      // Limpar form para novo
+      setRamoCategoria('')
       setFormData({
         nome: '',
         ramo: '',
@@ -239,15 +262,38 @@ export function ClientModal({ isOpen, onClose, onSuccess, cliente }: ClientModal
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Ramo de Atividade *
             </label>
-            <input
-              type="text"
-              name="ramo"
-              value={formData.ramo}
-              onChange={handleInputChange}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Ex: Saúde, Educação, etc"
-            />
+            <select
+              value={ramoCategoria}
+              onChange={e => handleRamoCategoriaChange(e.target.value)}
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                errors.ramo ? 'border-red-300 bg-red-50' : 'border-gray-300'
+              }`}
+            >
+              <option value="">Selecione o ramo de atividade</option>
+              {RAMOS_OPTIONS.map(ramo => (
+                <option key={ramo} value={ramo}>{ramo}</option>
+              ))}
+            </select>
+            {ramoCategoria === 'Outros prestadores de serviços' && (
+              <div className="mt-3">
+                <input
+                  type="text"
+                  name="ramo"
+                  value={formData.ramo}
+                  onChange={handleInputChange}
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    errors.ramo ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                  }`}
+                  placeholder="Descreva o ramo de atividade"
+                />
+              </div>
+            )}
+            {errors.ramo && (
+              <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
+                <AlertCircle className="w-4 h-4" />
+                {errors.ramo}
+              </p>
+            )}
           </div>
 
           {/* Row 3: WhatsApp e Email */}
