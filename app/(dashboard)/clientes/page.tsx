@@ -162,23 +162,14 @@ export default function ClientesPage() {
           <p className="text-lg font-semibold text-gray-900">Clientes cadastrados</p>
           <p className="text-sm text-gray-500">Edite, exclua ou exporte informações rápidas.</p>
         </div>
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <button
-            onClick={handleExportClientes}
-            disabled={loading || clientes.length === 0}
-            className="inline-flex items-center gap-2 justify-center bg-brand-600 text-white px-4 py-2 rounded-lg hover:bg-brand-700 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Download className="w-5 h-5" />
-            Exportar CSV
-          </button>
-          <button
-            onClick={handleNovoClient}
-            className="inline-flex items-center gap-2 justify-center bg-brand-600 text-white px-4 py-2 rounded-lg hover:bg-brand-700 transition font-medium"
-          >
-            <Plus className="w-5 h-5" />
-            Novo Cliente
-          </button>
-        </div>
+        <button
+          onClick={handleExportClientes}
+          disabled={loading || clientes.length === 0}
+          className="inline-flex items-center gap-2 justify-center bg-brand-600 text-white px-4 py-2 rounded-lg hover:bg-brand-700 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Download className="w-5 h-5" />
+          Exportar CSV
+        </button>
       </div>
 
       {loading ? (

@@ -15,6 +15,7 @@ import {
   Download,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
 } from 'lucide-react'
 import { Agendamento, Cliente } from '@/types'
 import { createClient } from '@/lib/supabase/client'
@@ -37,6 +38,7 @@ export default function AgendaPage() {
   const [selectedAgendamento, setSelectedAgendamento] = useState<Agendamento | null>(null)
   const [deleting, setDeleting] = useState<string | null>(null)
   const [popover, setPopover] = useState<{ agendamento: Agendamento; x: number; y: number } | null>(null)
+  const [notifOpen, setNotifOpen] = useState(true)
 
   const [filterClienteId, setFilterClienteId] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
@@ -344,7 +346,7 @@ export default function AgendaPage() {
         </div>
       </section>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6">
+      <div className={`grid grid-cols-1 gap-6 ${notifOpen ? 'lg:grid-cols-[1fr_300px]' : ''}`}>
         <div className="space-y-6">
           <div className="bg-white rounded-3xl border border-gray-200 p-6 shadow-sm">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-4">
@@ -585,60 +587,80 @@ export default function AgendaPage() {
           </div>
         </div>
 
-        <aside className="space-y-6">
-          <div className="bg-white rounded-3xl border border-gray-200 p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-bold text-gray-900">Notificações</h2>
-              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-brand-100 text-brand-700 text-xs font-bold">
-                {agendamentosFiltrados.length}
-              </span>
-            </div>
-            <div className="space-y-2 max-h-[600px] overflow-y-auto">
-              {loading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-5 h-5 animate-spin text-brand-700" />
+        {notifOpen && (
+          <aside>
+            <div className="bg-white rounded-3xl border border-gray-200 shadow-sm">
+              {/* Header colapsável */}
+              <div
+                className="flex items-center justify-between px-4 py-3 cursor-pointer select-none"
+                onClick={() => setNotifOpen(false)}
+              >
+                <div className="flex items-center gap-2">
+                  <h2 className="text-sm font-bold text-gray-900">Notificações</h2>
+                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-brand-100 text-brand-700 text-[11px] font-bold">
+                    {agendamentosFiltrados.length}
+                  </span>
                 </div>
-              ) : agendamentosFiltrados.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-8 text-center">
-                  <AlertCircle className="w-8 h-8 text-gray-300 mb-2" />
-                  <p className="text-sm text-gray-500">Nenhum agendamento</p>
-                </div>
-              ) : (
-                agendamentosFiltrados.slice(0, 20).map(agendamento => {
-                  const config = statusConfig[agendamento.status as keyof typeof statusConfig]
-                  const clienteName = (agendamento as any).clientes?.nome || 'Cliente'
-                  return (
-                    <div
-                      key={agendamento.id}
-                      className="group flex items-start gap-3 p-3 rounded-2xl bg-gradient-to-r from-gray-50 to-transparent border border-gray-100 hover:border-brand-200 hover:bg-brand-50 transition cursor-pointer"
-                    >
-                      <div className={`flex-shrink-0 w-2 h-2 mt-1.5 rounded-full ${config.bg}`} />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <p className="text-xs font-semibold text-gray-900 group-hover:text-brand-700 truncate">
+                <ChevronDown className="w-4 h-4 text-gray-400 rotate-180" />
+              </div>
+
+              {/* Lista compacta */}
+              <div className="px-3 pb-3 space-y-1 max-h-[420px] overflow-y-auto">
+                {loading ? (
+                  <div className="flex items-center justify-center py-6">
+                    <Loader2 className="w-4 h-4 animate-spin text-brand-700" />
+                  </div>
+                ) : agendamentosFiltrados.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-6 text-center">
+                    <AlertCircle className="w-6 h-6 text-gray-300 mb-1" />
+                    <p className="text-xs text-gray-500">Nenhum agendamento</p>
+                  </div>
+                ) : (
+                  agendamentosFiltrados.slice(0, 30).map(agendamento => {
+                    const config = statusConfig[agendamento.status as keyof typeof statusConfig]
+                    const clienteName = (agendamento as any).clientes?.nome || 'Cliente'
+                    return (
+                      <div
+                        key={agendamento.id}
+                        className={`flex items-center gap-2 px-2 py-1.5 rounded-xl border-l-[3px] ${config.bg} ${config.border} hover:brightness-95 transition cursor-pointer`}
+                        onClick={e => handleCardClick(agendamento, e)}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-1">
+                            <p className={`text-xs font-semibold truncate ${config.text}`}>
                               {agendamento.nome_paciente}
                             </p>
-                            <p className="text-xs text-gray-600 mt-0.5 truncate">{clienteName}</p>
+                            <span className="text-[9px] text-gray-500 whitespace-nowrap flex-shrink-0">
+                              {formatarDataCurta(agendamento.data)} {formatarHorario(agendamento.horario)}
+                            </span>
                           </div>
-                          <span className={`flex-shrink-0 text-[9px] font-bold px-2 py-1 rounded-full whitespace-nowrap ${config.bg} ${config.text}`}>
-                            {config.label}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1.5 mt-1.5 text-xs text-gray-500">
-                          <Calendar className="w-3 h-3" />
-                          <span>{formatarDataCurta(agendamento.data)}</span>
-                          <Clock className="w-3 h-3 ml-1" />
-                          <span>{formatarHorario(agendamento.horario)}</span>
+                          <p className="text-[10px] text-gray-500 truncate">{clienteName}</p>
                         </div>
                       </div>
-                    </div>
-                  )
-                })
-              )}
+                    )
+                  })
+                )}
+              </div>
             </div>
-          </div>
-        </aside>
+          </aside>
+        )}
+
+        {!notifOpen && (
+          <aside className="hidden lg:block">
+            <button
+              onClick={() => setNotifOpen(true)}
+              className="w-full flex items-center justify-between gap-2 bg-white rounded-3xl border border-gray-200 shadow-sm px-4 py-3 hover:bg-gray-50 transition"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold text-gray-900">Notificações</span>
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-brand-100 text-brand-700 text-[11px] font-bold">
+                  {agendamentosFiltrados.length}
+                </span>
+              </div>
+              <ChevronDown className="w-4 h-4 text-gray-400" />
+            </button>
+          </aside>
+        )}
       </div>
 
       {/* Popover de status rápido */}
