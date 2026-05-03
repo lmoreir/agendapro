@@ -19,6 +19,7 @@ interface AgendamentoModalProps {
   onSuccess: () => void
   agendamento?: Agendamento | null
   clientes: Cliente[]
+  defaultClienteId?: string
 }
 
 // Tipo union com a config de horários (cliente ou especialista)
@@ -51,6 +52,7 @@ export function AgendamentoModal({
   onSuccess,
   agendamento,
   clientes,
+  defaultClienteId,
 }: AgendamentoModalProps) {
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -98,8 +100,9 @@ export function AgendamentoModal({
         status: agendamento.status,
       })
     } else {
+      const preCliente = defaultClienteId || (clientes.length === 1 ? clientes[0].id : '')
       setFormData({
-        cliente_id: clientes.length === 1 ? clientes[0].id : '',
+        cliente_id: preCliente,
         especialista_id: '',
         nome_paciente: '',
         whatsapp_paciente: '',

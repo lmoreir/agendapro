@@ -779,6 +779,7 @@ export default function AgendaPage() {
         onSuccess={loadData}
         agendamento={selectedAgendamento}
         clientes={clientes}
+        defaultClienteId={selectedAgendamento ? undefined : filterClienteId}
       />
     </div>
   )
