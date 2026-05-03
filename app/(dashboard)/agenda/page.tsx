@@ -23,10 +23,10 @@ import { exportAgendamentosToCSV } from '@/lib/export'
 import { useToast } from '@/hooks/useToast'
 
 const statusConfig = {
-  agendado: { label: 'Agendado', bg: 'bg-blue-100', text: 'text-blue-800' },
-  confirmado: { label: 'Confirmado', bg: 'bg-green-100', text: 'text-green-800' },
-  realizado: { label: 'Realizado', bg: 'bg-gray-100', text: 'text-gray-800' },
-  cancelado: { label: 'Cancelado', bg: 'bg-red-100', text: 'text-red-800' },
+  agendado:   { label: 'Agendado',   bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-400' },
+  confirmado: { label: 'Confirmado', bg: 'bg-green-100',  text: 'text-green-800',  border: 'border-green-500'  },
+  realizado:  { label: 'Realizado',  bg: 'bg-gray-100',   text: 'text-gray-600',   border: 'border-gray-400'   },
+  cancelado:  { label: 'Cancelado',  bg: 'bg-red-100',    text: 'text-red-700',    border: 'border-red-400'    },
 }
 
 export default function AgendaPage() {
@@ -36,6 +36,7 @@ export default function AgendaPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedAgendamento, setSelectedAgendamento] = useState<Agendamento | null>(null)
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [popover, setPopover] = useState<{ agendamento: Agendamento; x: number; y: number } | null>(null)
 
   const [filterClienteId, setFilterClienteId] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
@@ -168,6 +169,26 @@ export default function AgendaPage() {
   const handleCloseModal = () => {
     setIsModalOpen(false)
     setSelectedAgendamento(null)
+  }
+
+  const handleCardClick = (agendamento: Agendamento, e: React.MouseEvent) => {
+    e.stopPropagation()
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+    const x = Math.min(rect.left, window.innerWidth - 260)
+    const y = rect.bottom + 6 > window.innerHeight - 200 ? rect.top - 180 : rect.bottom + 6
+    setPopover({ agendamento, x, y })
+  }
+
+  const handleQuickStatus = async (id: string, status: Agendamento['status']) => {
+    try {
+      const { error } = await supabase.from('agendamentos').update({ status }).eq('id', id)
+      if (error) throw error
+      setAgendamentos(prev => prev.map(a => a.id === id ? { ...a, status } : a))
+      addToast(`Status: ${statusConfig[status].label}`, 'success')
+      setPopover(null)
+    } catch {
+      addToast('Erro ao atualizar status', 'error')
+    }
   }
 
   const agendamentosFiltrados = useMemo(
@@ -477,9 +498,9 @@ export default function AgendaPage() {
                                 return (
                                   <div
                                     key={agendamento.id}
-                                    className={`absolute left-1 right-1 rounded-lg border-l-[3px] border-brand-600 px-1.5 py-1 cursor-pointer hover:shadow-md hover:ring-1 hover:ring-brand-300 transition-shadow overflow-hidden ${config.bg}`}
+                                    className={`absolute left-1 right-1 rounded-lg border-l-[3px] px-1.5 py-1 cursor-pointer hover:shadow-md hover:brightness-95 transition-all overflow-hidden ${config.bg} ${config.border}`}
                                     style={{ top: `${topPx}px`, height: `${heightPx}px`, zIndex: 10 }}
-                                    onClick={() => handleEditAgendamento(agendamento)}
+                                    onClick={e => handleCardClick(agendamento, e)}
                                   >
                                     <p className="text-[10px] font-bold text-brand-800 leading-tight">
                                       {formatarHorario(agendamento.horario)}
@@ -535,14 +556,15 @@ export default function AgendaPage() {
                               return (
                                 <div
                                   key={ev.id}
-                                  className={`rounded-1.5xl p-1.5 border-l-2 ${
+                                  className={`rounded p-1.5 border-l-2 cursor-pointer hover:brightness-95 transition-all ${
                                     isCurrentMonth
-                                      ? `${config.bg} border-brand-600 text-gray-800`
+                                      ? `${config.bg} ${config.border}`
                                       : 'bg-gray-100 border-gray-300 text-gray-500'
                                   }`}
+                                  onClick={e => handleCardClick(ev, e)}
                                 >
-                                  <p className="font-bold truncate">{formatarHorario(ev.horario)}</p>
-                                  <p className="truncate">{ev.nome_paciente}</p>
+                                  <p className={`font-bold truncate ${isCurrentMonth ? config.text : ''}`}>{formatarHorario(ev.horario)}</p>
+                                  <p className="truncate text-gray-800">{ev.nome_paciente}</p>
                                   {clienteName && <p className="text-[9px] truncate text-gray-600">{clienteName}</p>}
                                 </div>
                               )
@@ -618,6 +640,50 @@ export default function AgendaPage() {
           </div>
         </aside>
       </div>
+
+      {/* Popover de status rápido */}
+      {popover && (
+        <>
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setPopover(null)}
+          />
+          <div
+            className="fixed z-50 bg-white rounded-2xl shadow-xl border border-gray-200 w-56 p-3"
+            style={{ top: popover.y, left: popover.x }}
+          >
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 truncate px-1">
+              {popover.agendamento.nome_paciente}
+            </p>
+            <div className="space-y-1 mb-3">
+              {(Object.entries(statusConfig) as [Agendamento['status'], typeof statusConfig[keyof typeof statusConfig]][]).map(([key, cfg]) => (
+                <button
+                  key={key}
+                  onClick={() => handleQuickStatus(popover.agendamento.id, key)}
+                  className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition hover:opacity-80 ${cfg.bg} ${cfg.text} ${
+                    popover.agendamento.status === key ? 'ring-2 ring-offset-1 ring-gray-400' : ''
+                  }`}
+                >
+                  <span className={`w-2 h-2 rounded-full border ${cfg.border} bg-current flex-shrink-0`} />
+                  {cfg.label}
+                  {popover.agendamento.status === key && (
+                    <span className="ml-auto text-[10px] font-bold opacity-60">atual</span>
+                  )}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => {
+                handleEditAgendamento(popover.agendamento)
+                setPopover(null)
+              }}
+              className="w-full px-3 py-1.5 rounded-lg text-sm font-medium bg-brand-600 text-white hover:bg-brand-700 transition"
+            >
+              Editar agendamento
+            </button>
+          </div>
+        </>
+      )}
 
       <AgendamentoModal
         isOpen={isModalOpen}
