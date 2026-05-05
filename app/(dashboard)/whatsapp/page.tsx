@@ -111,6 +111,7 @@ export default function WhatsAppPage() {
   }
 
   const handleSaveConfig = async () => {
+    console.log('SAVE CLICKED — config:', config)
     setSavingConfig(true)
     try {
       const payload = {
@@ -135,9 +136,10 @@ export default function WhatsAppPage() {
         if (error) throw error
         if (data) setConfig((prev) => ({ ...prev, id: data.id }))
       }
+      console.log('SAVE SUCCESS')
       addToast('Configuração salva!', 'success')
     } catch (err) {
-      console.error('Erro ao salvar whatsapp_config:', err)
+      console.error('SAVE ERROR:', err)
       addToast('Erro ao salvar: ' + (err instanceof Error ? err.message : String(err)), 'error')
     } finally {
       setSavingConfig(false)
