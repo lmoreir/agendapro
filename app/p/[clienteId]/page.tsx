@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
-import { ChevronLeft, ChevronRight, Clock, Calendar, Loader2, AlertCircle } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Clock, Loader2, AlertCircle, X, Phone, Calendar, Stethoscope, CreditCard, FileText, Plus } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { Cliente, Agendamento, Especialista } from '@/types'
 
@@ -45,6 +45,7 @@ export default function AgendaPublicaPage() {
   const [especialistas, setEspecialistas] = useState<Especialista[]>([])
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
+  const [selectedAg, setSelectedAg] = useState<Agendamento | null>(null)
 
   const supabase = createClient()
 
@@ -258,7 +259,8 @@ export default function AgendaPublicaPage() {
                     return (
                       <div
                         key={ag.id}
-                        className={`bg-white rounded-2xl border border-gray-100 p-4 shadow-sm ${isPast ? 'opacity-60' : ''}`}
+                        onClick={() => setSelectedAg(ag)}
+                        className={`bg-white rounded-2xl border border-gray-100 p-4 shadow-sm cursor-pointer active:scale-[0.98] transition-transform ${isPast ? 'opacity-60' : ''}`}
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex items-center gap-3 min-w-0">
@@ -300,6 +302,161 @@ export default function AgendaPublicaPage() {
       <div className="text-center pb-8 pt-2">
         <p className="text-xs text-gray-400">Gerado pelo <span className="font-semibold text-brand-600">AgendaPro</span></p>
       </div>
+
+      {/* FAB — agendar */}
+      {cliente?.pode_agendar && !selectedAg && (
+        <div className="fixed bottom-6 right-4 z-30">
+          <button
+            onClick={() => router.push(`/p/${clienteId}/agendar`)}
+            className="flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white font-semibold px-5 py-3.5 rounded-full shadow-lg shadow-brand-900/30 transition active:scale-95"
+          >
+            <Plus className="w-5 h-5" />
+            Agendar
+          </button>
+        </div>
+      )}
+
+      {/* Detail bottom sheet */}
+      {selectedAg && (() => {
+        const ag = selectedAg
+        const cfg = statusConfig[ag.status as keyof typeof statusConfig] ?? statusConfig.agendado
+        const esp = especialistas.find(e => e.id === ag.especialista_id)
+        const dayDate = new Date(ag.data + 'T00:00:00')
+        const dateLabel = `${DIAS_LABEL[dayDate.getDay()]}, ${dayDate.getDate()} de ${MESES_LABEL[dayDate.getMonth()]} ${dayDate.getFullYear()}`
+        const whatsFormatted = ag.whatsapp_paciente
+          ? ag.whatsapp_paciente.replace(/(\d{2})(\d{2})(\d{4,5})(\d{4})/, '+$1 ($2) $3-$4')
+          : null
+        const waLink = ag.whatsapp_paciente
+          ? `https://wa.me/55${ag.whatsapp_paciente.replace(/\D/g, '')}`
+          : null
+
+        return (
+          <>
+            {/* Backdrop */}
+            <div
+              className="fixed inset-0 bg-black/40 z-40"
+              onClick={() => setSelectedAg(null)}
+            />
+
+            {/* Sheet */}
+            <div className="fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-3xl shadow-2xl max-h-[85vh] overflow-y-auto">
+              {/* Handle + close */}
+              <div className="flex items-center justify-between px-5 pt-4 pb-2">
+                <div className="w-10 h-1 rounded-full bg-gray-300 mx-auto absolute left-1/2 -translate-x-1/2 top-3" />
+                <div />
+                <button
+                  onClick={() => setSelectedAg(null)}
+                  className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition ml-auto"
+                >
+                  <X className="w-4 h-4 text-gray-600" />
+                </button>
+              </div>
+
+              <div className="px-5 pb-8 space-y-4">
+                {/* Patient name + status */}
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-lg font-bold text-gray-900">{ag.nome_paciente}</p>
+                    {ag.tipo_atendimento && (
+                      <p className="text-sm text-gray-500 mt-0.5">{ag.tipo_atendimento}</p>
+                    )}
+                  </div>
+                  <span className={`text-xs font-semibold px-3 py-1 rounded-full flex-shrink-0 mt-1 ${cfg.bg} ${cfg.text}`}>
+                    {cfg.label}
+                  </span>
+                </div>
+
+                <div className="space-y-3">
+                  {/* Date */}
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-brand-50 flex items-center justify-center flex-shrink-0">
+                      <Calendar className="w-4 h-4 text-brand-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400 uppercase tracking-wide">Data</p>
+                      <p className="text-sm font-medium text-gray-900">{dateLabel}</p>
+                    </div>
+                  </div>
+
+                  {/* Time */}
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-brand-50 flex items-center justify-center flex-shrink-0">
+                      <Clock className="w-4 h-4 text-brand-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400 uppercase tracking-wide">Horário</p>
+                      <p className="text-sm font-medium text-gray-900 font-mono">{ag.horario.slice(0, 5)}</p>
+                    </div>
+                  </div>
+
+                  {/* WhatsApp */}
+                  {whatsFormatted && (
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                        <Phone className="w-4 h-4 text-emerald-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-400 uppercase tracking-wide">WhatsApp</p>
+                        {waLink ? (
+                          <a
+                            href={waLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm font-medium text-emerald-600 underline"
+                          >
+                            {whatsFormatted}
+                          </a>
+                        ) : (
+                          <p className="text-sm font-medium text-gray-900">{whatsFormatted}</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Specialist */}
+                  {esp && (
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-brand-50 flex items-center justify-center flex-shrink-0">
+                        <Stethoscope className="w-4 h-4 text-brand-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-400 uppercase tracking-wide">Especialista</p>
+                        <p className="text-sm font-medium text-gray-900">{esp.nome}{esp.especialidade ? ` · ${esp.especialidade}` : ''}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Convenio */}
+                  {ag.convenio_nome && (
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+                        <CreditCard className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-400 uppercase tracking-wide">Convênio</p>
+                        <p className="text-sm font-medium text-gray-900">{ag.convenio_nome}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Observacao */}
+                  {ag.observacao && (
+                    <div className="flex items-start gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-gray-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <FileText className="w-4 h-4 text-gray-500" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-400 uppercase tracking-wide">Observação</p>
+                        <p className="text-sm text-gray-700 mt-0.5 leading-relaxed">{ag.observacao}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </>
+        )
+      })()}
     </div>
   )
 }
