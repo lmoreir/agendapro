@@ -16,7 +16,6 @@ const pageTitles: Record<string, string> = {
 const pageActions: Record<string, { label: string; href: string }> = {
   '/dashboard': { label: 'Novo agendamento', href: '/agenda' },
   '/agenda':    { label: 'Novo agendamento', href: '/agenda' },
-  '/clientes':  { label: 'Novo cliente',     href: '/clientes' },
 }
 
 export function Topbar() {
