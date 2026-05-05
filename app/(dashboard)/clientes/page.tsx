@@ -193,14 +193,7 @@ export default function ClientesPage() {
         <div className="bg-white rounded-3xl border border-gray-200 p-12 text-center shadow-sm">
           <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Nenhum cliente cadastrado</h3>
-          <p className="text-gray-600 mb-6">Comece criando um novo cliente para organizar seus agendamentos com clareza.</p>
-          <button
-            onClick={handleNovoClient}
-            className="inline-flex items-center gap-2 bg-brand-600 text-white px-4 py-2 rounded-lg hover:bg-brand-700 transition font-medium"
-          >
-            <Plus className="w-5 h-5" />
-            Criar Primeiro Cliente
-          </button>
+          <p className="text-gray-600">Clique em <strong>Novo Cliente</strong> para começar.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
