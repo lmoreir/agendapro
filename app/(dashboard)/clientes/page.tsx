@@ -144,19 +144,28 @@ export default function ClientesPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-3 gap-3 min-w-[18rem] sm:grid-cols-3">
-            <div className="rounded-3xl bg-brand-50 border border-brand-100 p-4 text-center">
-              <p className="text-xs text-brand-700 uppercase tracking-[0.2em]">Total</p>
-              <p className="mt-3 text-2xl font-semibold text-gray-900">{clientes.length}</p>
+          <div className="flex flex-col gap-3">
+            <div className="grid grid-cols-3 gap-3 min-w-[18rem]">
+              <div className="rounded-3xl bg-brand-50 border border-brand-100 p-4 text-center">
+                <p className="text-xs text-brand-700 uppercase tracking-[0.2em]">Total</p>
+                <p className="mt-3 text-2xl font-semibold text-gray-900">{clientes.length}</p>
+              </div>
+              <div className="rounded-3xl bg-emerald-50 border border-emerald-100 p-4 text-center">
+                <p className="text-xs text-emerald-700 uppercase tracking-[0.2em]">Ativos</p>
+                <p className="mt-3 text-2xl font-semibold text-gray-900">{ativosCount}</p>
+              </div>
+              <div className="rounded-3xl bg-yellow-50 border border-yellow-100 p-4 text-center">
+                <p className="text-xs text-yellow-700 uppercase tracking-[0.2em]">Onboarding</p>
+                <p className="mt-3 text-2xl font-semibold text-gray-900">{onboardingCount}</p>
+              </div>
             </div>
-            <div className="rounded-3xl bg-emerald-50 border border-emerald-100 p-4 text-center">
-              <p className="text-xs text-emerald-700 uppercase tracking-[0.2em]">Ativos</p>
-              <p className="mt-3 text-2xl font-semibold text-gray-900">{ativosCount}</p>
-            </div>
-            <div className="rounded-3xl bg-yellow-50 border border-yellow-100 p-4 text-center">
-              <p className="text-xs text-yellow-700 uppercase tracking-[0.2em]">Onboarding</p>
-              <p className="mt-3 text-2xl font-semibold text-gray-900">{onboardingCount}</p>
-            </div>
+            <button
+              onClick={handleNovoClient}
+              className="inline-flex items-center justify-center gap-2 bg-brand-600 text-white px-4 py-2.5 rounded-2xl hover:bg-brand-700 transition font-medium"
+            >
+              <Plus className="w-5 h-5" />
+              Novo Cliente
+            </button>
           </div>
         </div>
       </section>
@@ -166,23 +175,14 @@ export default function ClientesPage() {
           <p className="text-lg font-semibold text-gray-900">Clientes cadastrados</p>
           <p className="text-sm text-gray-500">Edite, exclua ou exporte informações rápidas.</p>
         </div>
-        <div className="flex gap-2">
-          <button
-            onClick={handleNovoClient}
-            className="inline-flex items-center gap-2 justify-center bg-brand-600 text-white px-4 py-2 rounded-lg hover:bg-brand-700 transition font-medium"
-          >
-            <Plus className="w-5 h-5" />
-            Novo Cliente
-          </button>
-          <button
-            onClick={handleExportClientes}
-            disabled={loading || clientes.length === 0}
-            className="inline-flex items-center gap-2 justify-center border border-gray-200 bg-white text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Download className="w-5 h-5" />
-            Exportar CSV
-          </button>
-        </div>
+        <button
+          onClick={handleExportClientes}
+          disabled={loading || clientes.length === 0}
+          className="inline-flex items-center gap-2 justify-center border border-gray-200 bg-white text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Download className="w-5 h-5" />
+          Exportar CSV
+        </button>
       </div>
 
       {loading ? (
