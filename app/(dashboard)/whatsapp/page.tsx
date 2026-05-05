@@ -180,16 +180,16 @@ export default function WhatsAppPage() {
             <span className="text-sm text-gray-600">
               {config.ativo ? 'Ativo' : 'Inativo'}
             </span>
-            <div className="relative">
+            <label className="relative block w-10 h-6 cursor-pointer">
               <input
                 type="checkbox"
                 className="sr-only peer"
                 checked={config.ativo}
                 onChange={(e) => setConfig((prev) => ({ ...prev, ativo: e.target.checked }))}
               />
-              <div className="w-10 h-6 rounded-full bg-gray-300 peer-checked:bg-brand-600 transition-colors cursor-pointer" />
+              <div className="w-10 h-6 rounded-full bg-gray-300 peer-checked:bg-brand-600 transition-colors" />
               <div className="absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform peer-checked:translate-x-4 pointer-events-none" />
-            </div>
+            </label>
           </div>
         </div>
 
