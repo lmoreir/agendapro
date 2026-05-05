@@ -124,18 +124,21 @@ export default function WhatsAppPage() {
         updated_at: new Date().toISOString(),
       }
       if (config.id) {
-        await supabase.from('whatsapp_config').update(payload).eq('id', config.id)
+        const { error } = await supabase.from('whatsapp_config').update(payload).eq('id', config.id)
+        if (error) throw error
       } else {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('whatsapp_config')
           .insert([payload])
           .select()
           .single()
+        if (error) throw error
         if (data) setConfig((prev) => ({ ...prev, id: data.id }))
       }
       addToast('Configuração salva!', 'success')
-    } catch {
-      addToast('Erro ao salvar configuração', 'error')
+    } catch (err) {
+      console.error('Erro ao salvar whatsapp_config:', err)
+      addToast('Erro ao salvar: ' + (err instanceof Error ? err.message : String(err)), 'error')
     } finally {
       setSavingConfig(false)
     }
